@@ -13,7 +13,7 @@ export interface ForgotPasswordResponse {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
+export class AuthService {  // Make sure this class is exported
   private readonly TOKEN_KEY = 'auth_token';
   private baseUrl = environment.apiUrl + '/auth';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());

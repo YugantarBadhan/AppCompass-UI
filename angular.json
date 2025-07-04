@@ -34,6 +34,11 @@
             "assets": [
               {
                 "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              },
+              {
+                "glob": "**/*",
                 "input": "public"
               }
             ],
@@ -66,21 +71,25 @@
           },
           "defaultConfiguration": "production"
         },
-        "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
-          "configurations": {
-            "production": {
-              "buildTarget": "appcompass-login:build:production"
-            },
-            "development": {
-              "buildTarget": "appcompass-login:build:development"
-            }
-          },
-          "defaultConfiguration": "development",
-          "options": {
-            
-          }
-        },
+       "serve": {
+  "builder": "@angular-devkit/build-angular:dev-server",
+  "configurations": {
+    "production": {
+      "buildTarget": "appcompass-login:build:production"
+    },
+    "development": {
+      "buildTarget": "appcompass-login:build:development",
+      "proxyConfig": "proxy.conf.json"
+    }
+  },
+  "defaultConfiguration": "development",
+  "options": {
+    "proxyConfig": "proxy.conf.json",
+    "host": "localhost",
+    "port": 4200
+  }
+}
+        ,
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n"
         },
@@ -93,6 +102,11 @@
             ],
             "tsConfig": "tsconfig.spec.json",
             "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              },
               {
                 "glob": "**/*",
                 "input": "public"
