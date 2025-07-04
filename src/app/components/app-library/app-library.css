@@ -447,61 +447,192 @@
 }
 
 /* Enhanced Pagination */
+/* Enhanced Pagination - Updated for better navigation */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
   margin-top: 2rem;
   gap: 0.5rem;
-}
-
-.pagination-page-button {
-  background-color: #e1e5e9;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  min-width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pagination-page-button:hover {
-  background-color: #d1d5db;
-}
-
-.pagination-page-button.active {
-  background-color: #667eea;
-  color: white;
+  flex-wrap: wrap;
 }
 
 .pagination-nav-button {
   background-color: #f3f4f6;
   border: none;
-  padding: 0.5rem;
+  padding: 0.25rem;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   transition: all 0.3s ease;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #6b7280;
+  font-weight: 500;
 }
 
-.pagination-nav-button:hover {
+.pagination-nav-button:hover:not(:disabled) {
   background-color: #e5e7eb;
   color: #374151;
+  transform: translateY(-1px);
 }
 
-.pagination-nav-button i {
-  font-size: 0.75rem;
+.pagination-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination-nav-button.first-last {
+  background-color: #667eea;
+  color: white;
+  font-weight: 600;
+}
+
+.pagination-nav-button.first-last:hover:not(:disabled) {
+  background-color: #5a6fd8;
+}
+
+.pagination-page-button {
+  background-color: #e1e5e9;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.pagination-page-button:hover {
+  background-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.pagination-page-button.active {
+  background-color: #667eea;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.pagination-ellipsis {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.pagination-info {
+  margin-left: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Page jump input */
+.page-jump-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.page-jump-input {
+  width: 50px;
+  height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.875rem;
+  padding: 0.25rem;
+}
+
+.page-jump-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.page-jump-button {
+  background-color: #667eea;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  height: 40px;
+}
+
+.page-jump-button:hover {
+  background-color: #5a6fd8;
+}
+
+.page-jump-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Responsive Design Updates */
+@media (max-width: 768px) {
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .pagination-page-button,
+  .pagination-nav-button {
+    min-width: 35px;
+    height: 35px;
+    font-size: 0.875rem;
+  }
+  
+  .pagination-info {
+    margin-left: 0;
+    margin-top: 0.5rem;
+    flex-basis: 100%;
+    text-align: center;
+  }
+  
+  .page-jump-container {
+    margin-left: 0;
+    margin-top: 0.5rem;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+  
+  .page-jump-input {
+    width: 45px;
+    height: 35px;
+    font-size: 0.8rem;
+  }
+  
+  .page-jump-button {
+    height: 35px;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
 }
 
 /* Results Summary */

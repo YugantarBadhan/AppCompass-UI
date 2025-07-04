@@ -35,7 +35,7 @@
   </div>
 
   <!-- Application Cards -->
-  <div *ngIf="!isLoading && !error && filteredApplications.length > 0" class="applications-grid">
+  <div *ngIf="!isLoading && !error && applications.length > 0" class="applications-grid">
     <div 
       *ngFor="let app of paginatedApplications" 
       class="application-card" 
@@ -82,50 +82,99 @@
   </div>
 
   <!-- No Results - Application does not exist -->
-  <div *ngIf="!isLoading && !error && filteredApplications.length === 0" class="no-applications">
+  <div *ngIf="!isLoading && !error && applications.length === 0" class="no-applications">
     <div class="no-apps-icon"><i class="fas fa-search"></i></div>
     <h3 class="no-apps-title">Application does not exist</h3>
     <p class="no-apps-message">
       <span *ngIf="searchTerm">No applications match your search "{{ searchTerm }}".</span>
       <span *ngIf="!searchTerm">No applications are available at the moment.</span>
     </p>
-    <button *ngIf="searchTerm" class="clear-search-button" (click)="searchTerm = ''; onSearchInput()">Clear Search</button>
+    <button *ngIf="searchTerm" class="clear-search-button" (click)="clearSearch()">Clear Search</button>
   </div>
 
-  <!-- Enhanced Pagination -->
-  <div class="pagination" *ngIf="!isLoading && !error && filteredApplications.length > 0 && totalPages > 1">
-    <!-- Previous Group Button -->
+  <!-- Enhanced Pagination with Smart Navigation -->
+  <div class="pagination" *ngIf="!isLoading && !error && totalItems > 0 && totalPages > 1">
+    <!-- First Page Button -->
     <button 
-      *ngIf="canGoToPreviousGroup" 
-      class="pagination-nav-button" 
-      (click)="goToPreviousGroup()"
-      title="Previous pages">
-      <i class="fas fa-chevron-left"></i>
+      class="pagination-nav-button first-last" 
+      (click)="goToFirstPage()"
+      [disabled]="currentPage === 1"
+      title="First page">
+      ⇤
     </button>
 
-    <!-- Page Numbers -->
+    <!-- Previous Page Button -->
     <button 
-      *ngFor="let page of visiblePages"
-      [class.active]="currentPage === page"
-      (click)="changePage(page)"
-      class="pagination-page-button">
-      {{ page }}
+      class="pagination-nav-button" 
+      (click)="goToPreviousPage()"
+      [disabled]="currentPage === 1"
+      title="Previous page">
+      ‹
     </button>
 
-    <!-- Next Group Button -->
+    <!-- Page Numbers with Smart Display -->
+    <ng-container *ngFor="let item of paginationItems">
+      <!-- Page Number Button -->
+      <button 
+        *ngIf="item.type === 'page'"
+        [class.active]="currentPage === item.value"
+        (click)="changePage(item.value)"
+        class="pagination-page-button"
+        [title]="'Go to page ' + item.value">
+        {{ item.value }}
+      </button>
+      
+      <!-- Ellipsis -->
+      <span 
+        *ngIf="item.type === 'ellipsis'"
+        class="pagination-ellipsis"
+        title="More pages">
+        ...
+      </span>
+    </ng-container>
+
+    <!-- Next Page Button -->
     <button 
-      *ngIf="canGoToNextGroup" 
       class="pagination-nav-button" 
-      (click)="goToNextGroup()"
-      title="Next pages">
-      <i class="fas fa-chevron-right"></i>
+      (click)="goToNextPage()"
+      [disabled]="currentPage === totalPages"
+      title="Next page">
+      ›
     </button>
+
+    <!-- Last Page Button -->
+    <button 
+      class="pagination-nav-button first-last" 
+      (click)="goToLastPage()"
+      [disabled]="currentPage === totalPages"
+      title="Last page">
+      ⇥
+    </button>
+
+    <!-- Quick Jump (only show if more than 10 pages) -->
+    <div class="page-jump-container" *ngIf="totalPages > 10">
+      <span class="page-jump-text">Go to:</span>
+      <input 
+        type="number" 
+        class="page-jump-input"
+        [(ngModel)]="jumpToPage"
+        [min]="1"
+        [max]="totalPages"
+        (keyup.enter)="performPageJump()"
+        placeholder="{{currentPage}}">
+      <button 
+        class="page-jump-button"
+        (click)="performPageJump()"
+        [disabled]="!jumpToPage || jumpToPage < 1 || jumpToPage > totalPages">
+        Go
+      </button>
+    </div>
   </div>
 
   <!-- Results Summary -->
-  <div class="results-summary" *ngIf="!isLoading && !error && filteredApplications.length > 0">
+  <div class="results-summary" *ngIf="!isLoading && !error && totalItems > 0">
     <p class="summary-text">
-      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredApplications.length) }} of {{ filteredApplications.length }} applications
+      Showing {{ resultsStartIndex }} to {{ resultsEndIndex }} of {{ totalItems }} applications
       <span *ngIf="searchTerm"> matching "{{ searchTerm }}"</span>
     </p>
   </div>
