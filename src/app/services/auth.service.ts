@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -7,6 +7,11 @@ import { AuthResponse, ForgotPasswordRequest, LoginCredentials } from '../models
 
 // Add this interface for forgot password response
 export interface ForgotPasswordResponse {
+  message: string;
+}
+
+// Add this interface for logout response
+export interface LogoutResponse {
   message: string;
 }
 
@@ -43,7 +48,32 @@ export class AuthService {  // Make sure this class is exported
     );
   }
 
+  logoutFromServer(): Observable<LogoutResponse> {
+    const token = this.getToken();
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.post<LogoutResponse>(`${this.baseUrl}/logout`, {}, {
+      headers,
+      withCredentials: true
+    }).pipe(
+      tap(() => {
+        this.clearAuthData();
+      }),
+      catchError((error) => {
+        // Even if server logout fails, clear local data
+        this.clearAuthData();
+        return this.handleError(error, 'logout');
+      })
+    );
+  }
+
   logout(): void {
+    this.clearAuthData();
+  }
+
+  private clearAuthData(): void {
     this.removeToken();
     this.isAuthenticatedSubject.next(false);
   }
@@ -74,7 +104,7 @@ export class AuthService {  // Make sure this class is exported
     return !!this.getToken();
   }
 
-  private handleError(error: HttpErrorResponse, context: 'login' | 'forgotPassword') {
+  private handleError(error: HttpErrorResponse, context: 'login' | 'forgotPassword' | 'logout') {
     console.error(`Auth Service Error (${context}):`, error);
 
     let message = 'An unknown error occurred. Please try again.';
@@ -96,6 +126,8 @@ export class AuthService {  // Make sure this class is exported
             message = 'Invalid request. Please check your credentials.';
           } else if (context === 'forgotPassword') {
             message = 'Invalid request. Please check the provided information.';
+          } else if (context === 'logout') {
+            message = 'Invalid logout request.';
           }
           break;
         case 401:
@@ -103,6 +135,8 @@ export class AuthService {  // Make sure this class is exported
             message = 'Invalid username or password.';
           } else if (context === 'forgotPassword') {
             message = 'Invalid credentials provided.';
+          } else if (context === 'logout') {
+            message = 'Session expired. You have been logged out.';
           }
           break;
         case 403:
@@ -113,6 +147,8 @@ export class AuthService {  // Make sure this class is exported
             message = 'Login service not found. Please contact support.';
           } else if (context === 'forgotPassword') {
             message = 'User not found or password reset service unavailable.';
+          } else if (context === 'logout') {
+            message = 'Logout service not found.';
           }
           break;
         case 422:
@@ -138,6 +174,8 @@ export class AuthService {  // Make sure this class is exported
             message = 'Login failed. Please try again.';
           } else if (context === 'forgotPassword') {
             message = 'Password reset failed. Please try again.';
+          } else if (context === 'logout') {
+            message = 'Logout failed. Please try again.';
           }
       }
     }

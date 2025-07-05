@@ -19,6 +19,9 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
   error: string | null = null;
   Math = Math;
 
+  // Search animation state
+  isSearchAnimating: boolean = false;
+
   // Search debounce subject
   private searchSubject = new Subject<string>();
 
@@ -163,10 +166,21 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle search button click (immediate search)
+   * Handle search button click (immediate search) with animation
    */
   onSearch(): void {
+    this.triggerSearchAnimation();
     this.performBackendSearch(this.searchTerm);
+  }
+
+  /**
+   * Trigger search animation
+   */
+  private triggerSearchAnimation(): void {
+    this.isSearchAnimating = true;
+    setTimeout(() => {
+      this.isSearchAnimating = false;
+    }, 600); // Animation duration
   }
 
   /**

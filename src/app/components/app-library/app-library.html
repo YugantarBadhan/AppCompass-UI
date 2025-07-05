@@ -9,8 +9,11 @@
         [(ngModel)]="searchTerm"
         (input)="onSearchInput()"
         (keyup.enter)="onSearch()">
-      <button class="search-button" (click)="onSearch()">
-        <i class="fas fa-search"></i>
+      <button 
+        class="search-button" 
+        (click)="onSearch()"
+        [class.searching]="isSearchAnimating">
+        <img src="assets/images/search.png" alt="Search" class="search-icon">
       </button>
     </div>
     <button class="refresh-button" (click)="refreshApplications()" [disabled]="isLoading">
