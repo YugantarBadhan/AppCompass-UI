@@ -113,34 +113,19 @@
   }
 }
 
-/* Additional search icon effects */
-.search-button.searching {
-  background: rgba(102, 126, 234, 0.15);
-  border-radius: 50%;
-  animation: searchButtonGlow 0.6s ease-in-out;
-}
-
-@keyframes searchButtonGlow {
-  0% {
-    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.1);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
-  }
-}
-
 /* Refresh Icon */
 .refresh-icon {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.3s ease;
+  width: 18px;
+  height: 18px;
+  display: inline-block;      /* allow transform */
+  transition: transform 0.3s ease;   /* smooth hover‑scale etc. */
+  transform-origin: 50% 50%;  /* rotate around centre */
 }
 
+/* spinning state */
 .refresh-icon.spinning {
   animation: spin 1s linear infinite;
+  transition: none; 
 }
 
 @keyframes spin {
