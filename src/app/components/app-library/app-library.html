@@ -49,6 +49,18 @@
       <div class="card-inner" (click)="handleCardClick(app.appId)">
         <!-- Card Front -->
         <div class="card-face card-front">
+          <!-- 💜 Favourite – now first child -->
+          <button
+            class="favorite-button"
+            (click)="toggleFavorite($event, app.appId)"
+            [class.favorited]="isFavorite(app.appId)"
+            [title]="isFavorite(app.appId) ? 'Remove from favourites' : 'Add to favourites'"
+            aria-label="Toggle favourite">
+            <img
+              [src]="isFavorite(app.appId) ? 'assets/images/heart-filled.png' : 'assets/images/heart.png'"
+              alt="Favorite"
+              class="heart-icon" />
+          </button>
           <div class="app-icon" [style.background]="getApplicationGradient(app)">
             <i *ngIf="app.icon" [class]="'fas fa-' + app.icon"></i>
             <span *ngIf="!app.icon" class="app-initials">{{ getApplicationIcon(app) }}</span>

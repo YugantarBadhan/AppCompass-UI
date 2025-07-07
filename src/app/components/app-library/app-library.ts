@@ -39,16 +39,95 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
   private supportsPagination: boolean = true;
   private supportsSearch: boolean = true;
 
+  // Add these properties to the existing component
+  favoriteApplications: Set<number> = new Set(); // Track favorite app IDs
+
   constructor(private applicationService: ApplicationService) {}
 
   ngOnInit(): void {
-    this.setupSearchDebounce();
-    this.loadApplications();
-  }
+  this.setupSearchDebounce();
+  this.loadApplications();
+  this.loadFavoriteApplications(); // Load favorites when component initializes
+}
 
   ngOnDestroy(): void {
     this.searchSubject.complete();
   }
+
+  /**
+ * Toggle favorite status of an application
+ */
+toggleFavorite(event: Event, appId: number): void {
+  event.stopPropagation(); // Prevent card flip when clicking heart
+  
+  if (this.favoriteApplications.has(appId)) {
+    this.unfavoriteApplication(appId);
+  } else {
+    this.favoriteApplication(appId);
+  }
+}
+
+/**
+ * Add application to favorites
+ */
+private favoriteApplication(appId: number): void {
+  // Add to local set immediately for UI responsiveness
+  this.favoriteApplications.add(appId);
+  
+  // Call API to save to backend
+  this.applicationService.addToFavorites(appId).subscribe({
+    next: () => {
+      console.log(`Application ${appId} added to favorites`);
+    },
+    error: (error) => {
+      console.error('Error adding to favorites:', error);
+      // Remove from local set if API call fails
+      this.favoriteApplications.delete(appId);
+    }
+  });
+}
+
+/**
+ * Remove application from favorites
+ */
+private unfavoriteApplication(appId: number): void {
+  // Remove from local set immediately for UI responsiveness
+  this.favoriteApplications.delete(appId);
+  
+  // Call API to remove from backend
+  this.applicationService.removeFromFavorites(appId).subscribe({
+    next: () => {
+      console.log(`Application ${appId} removed from favorites`);
+    },
+    error: (error) => {
+      console.error('Error removing from favorites:', error);
+      // Add back to local set if API call fails
+      this.favoriteApplications.add(appId);
+    }
+  });
+}
+
+/**
+ * Check if application is favorite
+ */
+isFavorite(appId: number): boolean {
+  return this.favoriteApplications.has(appId);
+}
+
+/**
+ * Load user's favorite applications
+ */
+private loadFavoriteApplications(): void {
+  this.applicationService.getFavoriteApplications().subscribe({
+    next: (favoriteIds: number[]) => {
+      this.favoriteApplications = new Set(favoriteIds);
+      console.log('Loaded favorite applications:', favoriteIds);
+    },
+    error: (error) => {
+      console.error('Error loading favorite applications:', error);
+    }
+  });
+}
 
   /**
    * Setup search debounce to avoid too many API calls
