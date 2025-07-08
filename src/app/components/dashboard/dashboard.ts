@@ -10,16 +10,13 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, AppLibraryComponent],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.css']
+  styleUrls: ['./dashboard.css'],
 })
 export class DashboardComponent implements OnDestroy {
   isUserMenuOpen = false;
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -33,9 +30,10 @@ export class DashboardComponent implements OnDestroy {
 
   logout(): void {
     this.isUserMenuOpen = false;
-    
+
     // Call server logout first
-    this.authService.logoutFromServer()
+    this.authService
+      .logoutFromServer()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -47,7 +45,7 @@ export class DashboardComponent implements OnDestroy {
           // as local data has been cleared
           console.error('Logout error:', error);
           this.router.navigate(['/login']);
-        }
+        },
       });
   }
 

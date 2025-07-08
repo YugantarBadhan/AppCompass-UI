@@ -17,6 +17,7 @@ export interface Application {
   appName: string;
   appDescription: string;
   active: boolean;
+  favorite?: boolean;
   icon?: string;
   initials?: string;
   gradientColors?: string[];

@@ -3,7 +3,7 @@ import {
   HttpInterceptor,
   HttpRequest,
   HttpHandler,
-  HttpEvent
+  HttpEvent,
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
@@ -11,26 +11,27 @@ import { jwtDecode } from 'jwt-decode'; // npm i jwt-decode
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-
   // Endpoints that must **never** carry a Bearer header
   private readonly authFree = ['/login', '/authenticate', '/refresh-token'];
 
   constructor(private authService: AuthService) {}
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-
+  intercept(
+    req: HttpRequest<any>,
+    next: HttpHandler
+  ): Observable<HttpEvent<any>> {
     // 📝 1. Leave auth‑free calls untouched (login, refresh, register …)
-    if (this.authFree.some(url => req.url.includes(url))) {
+    if (this.authFree.some((url) => req.url.includes(url))) {
       return next.handle(req);
     }
 
     // 📝 2. Grab the *latest* token from storage every time
-    const token = this.authService.token;            // getter in AuthService
+    const token = this.authService.token; // getter in AuthService
 
     // 📝 3. Attach the header only when a non‑expired token exists
     if (token && !this.isExpired(token)) {
       req = req.clone({
-        setHeaders: { Authorization: `Bearer ${token}` }
+        setHeaders: { Authorization: `Bearer ${token}` },
       });
     }
 

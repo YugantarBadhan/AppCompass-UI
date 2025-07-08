@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password';
@@ -10,9 +15,15 @@ import { LoadingComponent } from '../../components/dashboard/loading/loading.com
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ForgotPasswordComponent, AlertComponent, LoadingComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ForgotPasswordComponent,
+    AlertComponent,
+    LoadingComponent,
+  ],
   templateUrl: './login.html',
-  styleUrls: ['./login.css']
+  styleUrls: ['./login.css'],
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
@@ -34,7 +45,7 @@ export class LoginComponent implements OnInit {
   initializeForm() {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
@@ -50,10 +61,10 @@ export class LoginComponent implements OnInit {
     if (this.loginForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
-      
+
       const credentials = {
         username: this.loginForm.get('username')?.value.trim(),
-        password: this.loginForm.get('password')?.value
+        password: this.loginForm.get('password')?.value,
       };
 
       this.authService.login(credentials).subscribe({
@@ -68,8 +79,9 @@ export class LoginComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error.message || 'Invalid username or password. Please try again.';
-        }
+          this.errorMessage =
+            error.message || 'Invalid username or password. Please try again.';
+        },
       });
     } else {
       this.markAllFieldsAsTouched();
@@ -92,7 +104,7 @@ export class LoginComponent implements OnInit {
   }
 
   private markAllFieldsAsTouched() {
-    Object.keys(this.loginForm.controls).forEach(key => {
+    Object.keys(this.loginForm.controls).forEach((key) => {
       this.loginForm.get(key)?.markAsTouched();
     });
   }

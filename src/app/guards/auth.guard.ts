@@ -5,14 +5,9 @@ import { jwtDecode } from 'jwt-decode';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(): boolean {
-
     const token = this.authService.token;
 
     // 📝 1. No token at all → go to login
@@ -23,7 +18,7 @@ export class AuthGuard implements CanActivate {
 
     // 📝 2. Expired token → clear & redirect
     if (this.isExpired(token)) {
-      this.authService.logout();     // make sure you clear storage in logout()
+      this.authService.logout(); // make sure you clear storage in logout()
       this.router.navigate(['/login']);
       return false;
     }

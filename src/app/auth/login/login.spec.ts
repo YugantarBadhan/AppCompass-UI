@@ -23,19 +23,21 @@ describe('LoginComponent', () => {
         LoginComponent,
         ReactiveFormsModule,
         AlertComponent,
-        LoadingComponent
+        LoadingComponent,
       ],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
-        { provide: Router, useValue: routerSpy }
-      ]
+        { provide: Router, useValue: routerSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
-    mockAuthService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    mockAuthService = TestBed.inject(
+      AuthService
+    ) as jasmine.SpyObj<AuthService>;
     mockRouter = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    
+
     fixture.detectChanges();
   });
 
@@ -84,7 +86,7 @@ describe('LoginComponent', () => {
 
     component.loginForm.patchValue({
       username: 'testuser',
-      password: 'password123'
+      password: 'password123',
     });
 
     expect(component.isLoginDisabled).toBeFalsy();
@@ -93,7 +95,7 @@ describe('LoginComponent', () => {
   it('should disable login button when loading', () => {
     component.loginForm.patchValue({
       username: 'testuser',
-      password: 'password123'
+      password: 'password123',
     });
     component.isLoading = true;
 
@@ -102,38 +104,44 @@ describe('LoginComponent', () => {
 
   it('should toggle password visibility', () => {
     expect(component.passwordVisible).toBeFalsy();
-    
+
     component.togglePasswordVisibility();
     expect(component.passwordVisible).toBeTruthy();
-    
+
     component.togglePasswordVisibility();
     expect(component.passwordVisible).toBeFalsy();
   });
 
   it('should call auth service on login with valid form', () => {
-    const mockResponse = { token: 'fake-token', user: { id: 1, username: 'testuser' } };
+    const mockResponse = {
+      token: 'fake-token',
+      user: { id: 1, username: 'testuser' },
+    };
     mockAuthService.login.and.returnValue(of(mockResponse));
 
     component.loginForm.patchValue({
       username: 'testuser',
-      password: 'password123'
+      password: 'password123',
     });
 
     component.onLogin();
 
     expect(mockAuthService.login).toHaveBeenCalledWith({
       username: 'testuser',
-      password: 'password123'
+      password: 'password123',
     });
   });
 
   it('should navigate to dashboard on successful login', () => {
-    const mockResponse = { token: 'fake-token', user: { id: 1, username: 'testuser' } };
+    const mockResponse = {
+      token: 'fake-token',
+      user: { id: 1, username: 'testuser' },
+    };
     mockAuthService.login.and.returnValue(of(mockResponse));
 
     component.loginForm.patchValue({
       username: 'testuser',
-      password: 'password123'
+      password: 'password123',
     });
 
     component.onLogin();
@@ -143,11 +151,13 @@ describe('LoginComponent', () => {
 
   it('should show error message on login failure', () => {
     const errorMessage = 'Invalid credentials';
-    mockAuthService.login.and.returnValue(throwError(() => ({ message: errorMessage })));
+    mockAuthService.login.and.returnValue(
+      throwError(() => ({ message: errorMessage }))
+    );
 
     component.loginForm.patchValue({
       username: 'testuser',
-      password: 'wrongpassword'
+      password: 'wrongpassword',
     });
 
     component.onLogin();
@@ -161,21 +171,26 @@ describe('LoginComponent', () => {
 
     component.loginForm.patchValue({
       username: 'testuser',
-      password: 'wrongpassword'
+      password: 'wrongpassword',
     });
 
     component.onLogin();
 
-    expect(component.errorMessage).toBe('Invalid username or password. Please try again.');
+    expect(component.errorMessage).toBe(
+      'Invalid username or password. Please try again.'
+    );
   });
 
   it('should show error when login succeeds but no token received', () => {
-    const mockResponse = { token: 'fake-token', user: { id: 1, username: 'testuser' } }; // No token
+    const mockResponse = {
+      token: 'fake-token',
+      user: { id: 1, username: 'testuser' },
+    }; // No token
     mockAuthService.login.and.returnValue(of(mockResponse));
 
     component.loginForm.patchValue({
       username: 'testuser',
-      password: 'password123'
+      password: 'password123',
     });
 
     component.onLogin();
@@ -188,7 +203,7 @@ describe('LoginComponent', () => {
     spyOn(component as any, 'markAllFieldsAsTouched'); // `as any` to access private method
     component.loginForm.patchValue({
       username: '',
-      password: ''
+      password: '',
     });
 
     component.onLogin();
@@ -199,7 +214,7 @@ describe('LoginComponent', () => {
   it('should reset form and hide forgot password on back to login', () => {
     component.loginForm.patchValue({
       username: 'testuser',
-      password: 'password123'
+      password: 'password123',
     });
     component.showForgotPassword = true;
     component.errorMessage = 'Some error';

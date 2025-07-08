@@ -41,8 +41,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .logo-text {
@@ -113,11 +118,11 @@
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 0.3rem 0.50rem;
+  padding: 0.3rem 0.5rem;
   cursor: pointer;
   transition: background-color 0.2s;
   border-radius: 0.375rem;
-  margin: 0.20rem;
+  margin: 0.2rem;
 }
 
 .dropdown-item:hover {
@@ -244,20 +249,20 @@
   .sidebar {
     width: 240px;
   }
-  
+
   .header-content {
     padding: 0.5rem 1rem;
     height: 50px;
   }
-  
+
   .global-header {
     min-height: 50px;
   }
-  
+
   .logo-text {
     font-size: 18px;
   }
-  
+
   .avatar-img {
     width: 32px;
     height: 32px;
