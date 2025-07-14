@@ -23,6 +23,23 @@ export interface Application {
   gradientColors?: string[];
 }
 
+export interface ApplicationDetails {
+  applicationName: string;
+  description: string;
+  spocName: string;
+  teamName: string;
+  active: boolean;
+}
+
+export interface FavoriteApp {
+  appId: number;
+  appName: string;
+  appDescription: string;
+  isActive: boolean;
+  spocName: string;
+  teamName: string;
+}
+
 export interface PaginatedApplicationResponse {
   data: Application[];
   total: number;
@@ -50,7 +67,7 @@ export class ApplicationService {
   /* Helpers                                            */
   /* -------------------------------------------------- */
 
-  /** Raw JWT (or null) */
+  /** Raw JWT (or null) */
   private getAccessToken(): string | null {
     return localStorage.getItem('auth_token');
   }
@@ -143,21 +160,25 @@ export class ApplicationService {
       .get<Application>(`${this.baseUrl}/${id}`, this.httpOptions)
       .pipe(catchError(this.handleError));
   }
+
   createApplication(app: Omit<Application, 'appId'>) {
     return this.http
       .post<Application>(this.baseUrl, app, this.httpOptions)
       .pipe(catchError(this.handleError));
   }
+
   updateApplication(id: number, app: Partial<Application>) {
     return this.http
       .put<Application>(`${this.baseUrl}/${id}`, app, this.httpOptions)
       .pipe(catchError(this.handleError));
   }
+
   deleteApplication(id: number) {
     return this.http
       .delete<void>(`${this.baseUrl}/${id}`, this.httpOptions)
       .pipe(catchError(this.handleError));
   }
+
   toggleApplicationStatus(id: number) {
     return this.http
       .patch<Application>(
@@ -184,9 +205,14 @@ export class ApplicationService {
       .pipe(catchError(this.handleError));
   }
 
-  getFavoriteApplications(): Observable<number[]> {
+  /** Get favorite applications with full info by app name*/
+  getApplicationDetailsByName(appName: string): Observable<ApplicationDetails> {
+    const params = new HttpParams().set('name', appName);
     return this.http
-      .get<number[]>(`${this.baseUrl}/favoriteApp`, this.httpOptions)
+      .get<ApplicationDetails>(`${this.baseUrl}/detailsByName`, {
+        ...this.httpOptions,
+        params,
+      })
       .pipe(catchError(this.handleError));
   }
 
@@ -205,7 +231,7 @@ export class ApplicationService {
           break;
         case 401:
           message = 'Unauthorized. Please log in again.';
-          localStorage.removeItem('auth_token');
+          // localStorage.removeItem('auth_token');
           break;
         case 403:
           message = 'Access denied.';

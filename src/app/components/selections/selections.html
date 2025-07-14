@@ -1,0 +1,274 @@
+<!-- Search Section -->
+<div class="search-section">
+  <div class="search-container">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search applications..."
+      [(ngModel)]="searchTerm"
+      (input)="onSearchInput()"
+      (keyup.enter)="onSearch()"
+    />
+    <button
+      class="search-button"
+      (click)="onSearch()"
+      [class.searching]="isSearchAnimating"
+    >
+      <img src="assets/images/search.png" alt="Search" class="search-icon" />
+    </button>
+  </div>
+  <button
+    class="refresh-button"
+    (click)="refreshApplications()"
+    [disabled]="isLoading"
+  >
+    <img
+      src="assets/images/refresh.png"
+      alt="Refresh"
+      class="refresh-icon"
+      [class.spinning]="isLoading"
+    />
+  </button>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="isLoading" class="loading-container">
+  <div class="spinner"></div>
+  <p>Loading favorite applications...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !isLoading" class="error-container">
+  <div class="error-icon">⚠️</div>
+  <p>{{ error }}</p>
+  <button class="retry-button" (click)="refreshApplications()">
+    Try Again
+  </button>
+</div>
+
+<!-- Empty State -->
+<div
+  *ngIf="!isLoading && !error && applications.length === 0"
+  class="empty-state"
+>
+  <div class="empty-icon">⭐</div>
+  <h3>No Favorite Applications</h3>
+  <p>You haven't marked any applications as favorites yet.</p>
+  <p class="empty-hint">
+    Go to the App Library and click the heart icon to add favorites.
+  </p>
+</div>
+
+<!-- Applications Grid -->
+<div
+  *ngIf="!isLoading && !error && applications.length > 0"
+  class="applications-grid"
+  [class.popup-open]="showPopup"
+>
+  <div class="grid-container">
+    <div
+      *ngFor="let app of applications"
+      class="application-card"
+      (click)="openApplicationDetails(app)"
+    >
+      <div class="card-header">
+        <div class="app-icon" [style.background]="getApplicationGradient(app)">
+          {{ getApplicationIcon(app) }}
+        </div>
+        <button
+          class="favorite-button favorited"
+          (click)="toggleFavorite($event, app)"
+          title="Remove from favorites"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="card-content">
+        <h3 class="app-name">{{ app.appName }}</h3>
+        <p class="app-description">
+          {{ getTruncatedDescription(app.appDescription) }}
+        </p>
+        <div class="app-status">
+          <span class="status-indicator" [class.active]="app.active">
+            {{ app.active ? "Active" : "Inactive" }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Results Info -->
+<div
+  *ngIf="!isLoading && !error && applications.length > 0"
+  class="results-info"
+>
+  <p>
+    Showing {{ resultsStartIndex }}-{{ resultsEndIndex }} of
+    {{ totalItems }} favorite applications
+  </p>
+</div>
+
+<!-- Enhanced Pagination with Smart Navigation -->
+<div
+  class="pagination"
+  *ngIf="!isLoading && !error && totalItems > 0 && totalPages > 1"
+>
+  <!-- First Page Button -->
+  <button
+    class="pagination-nav-button first-last"
+    (click)="goToFirstPage()"
+    [disabled]="currentPage === 1"
+    title="First page"
+  >
+    ⇤
+  </button>
+
+  <!-- Previous Page Button -->
+  <button
+    class="pagination-nav-button"
+    (click)="goToPreviousPage()"
+    [disabled]="currentPage === 1"
+    title="Previous page"
+  >
+    ‹
+  </button>
+
+  <!-- Page Numbers with Smart Display -->
+  <ng-container *ngFor="let item of paginationItems">
+    <!-- Page Number Button -->
+    <button
+      *ngIf="item.type === 'page'"
+      [class.active]="currentPage === item.value"
+      (click)="changePage(item.value)"
+      class="pagination-page-button"
+      [title]="'Go to page ' + item.value"
+    >
+      {{ item.value }}
+    </button>
+
+    <!-- Ellipsis -->
+    <span
+      *ngIf="item.type === 'ellipsis'"
+      class="pagination-ellipsis"
+      title="More pages"
+    >
+      ...
+    </span>
+  </ng-container>
+
+  <!-- Next Page Button -->
+  <button
+    class="pagination-nav-button"
+    (click)="goToNextPage()"
+    [disabled]="currentPage === totalPages"
+    title="Next page"
+  >
+    ›
+  </button>
+
+  <!-- Last Page Button -->
+  <button
+    class="pagination-nav-button first-last"
+    (click)="goToLastPage()"
+    [disabled]="currentPage === totalPages"
+    title="Last page"
+  >
+    ⇥
+  </button>
+
+  <!-- Quick Jump (only show if more than 10 pages) -->
+  <div class="page-jump-container" *ngIf="totalPages > 10">
+    <span class="page-jump-text">Go to:</span>
+    <input
+      type="number"
+      class="page-jump-input"
+      [(ngModel)]="jumpToPage"
+      [min]="1"
+      [max]="totalPages"
+      (keyup.enter)="performPageJump()"
+      placeholder="{{ currentPage }}"
+    />
+    <button
+      class="page-jump-button"
+      (click)="performPageJump()"
+      [disabled]="!jumpToPage || jumpToPage < 1 || jumpToPage > totalPages"
+    >
+      Go
+    </button>
+  </div>
+</div>
+
+<!-- Application Details Popup -->
+<div
+  *ngIf="showPopup && selectedApplication"
+  class="popup-overlay"
+  (click)="closePopup()"
+>
+  <div class="popup-content" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <h2>Application Details</h2>
+      <button class="close-button" (click)="closePopup()">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="popup-body">
+      <div class="detail-section">
+        <label>Application Name:</label>
+        <p>{{ selectedApplication.appName }}</p>
+      </div>
+
+      <div class="detail-section">
+        <label>Description:</label>
+        <p>
+          {{ selectedApplication.appDescription || "No description available" }}
+        </p>
+      </div>
+
+      <div class="detail-section">
+        <label>SPOC Name:</label>
+        <p *ngIf="!isLoadingDetails">
+          {{ selectedApplicationDetails?.spocName || "Not assigned" }}
+        </p>
+        <div *ngIf="isLoadingDetails" class="loading-text">Loading...</div>
+      </div>
+
+      <div class="detail-section">
+        <label>Team Name:</label>
+        <p *ngIf="!isLoadingDetails">
+          {{ selectedApplicationDetails?.teamName || "Not assigned" }}
+        </p>
+        <div *ngIf="isLoadingDetails" class="loading-text">Loading...</div>
+      </div>
+
+      <div class="detail-section">
+        <label>Active Status:</label>
+        <span class="status-badge" [class.active]="selectedApplication.active">
+          {{ selectedApplication.active ? "Active" : "Inactive" }}
+        </span>
+      </div>
+
+      <!-- Loading indicator for details -->
+      <div *ngIf="isLoadingDetails" class="loading-details">
+        <div class="spinner-small"></div>
+        <p>Loading additional details...</p>
+      </div>
+    </div>
+  </div>
+</div>
