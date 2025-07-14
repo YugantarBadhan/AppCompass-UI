@@ -1,4 +1,3 @@
-// selections.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,10 +16,11 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
   styleUrls: ['./selections.css'],
 })
 export class SelectionsComponent implements OnInit, OnDestroy {
-  applications: Application[] = [];
-  allApplications: Application[] = [];
+  applications: Application[] = []; // Filtered + paginated favorites
+  allApplications: Application[] = []; // All favorite apps fetched
   searchTerm: string = '';
   isLoading: boolean = true;
+  isSearching: boolean = false;
   error: string | null = null;
   Math = Math;
 
@@ -36,7 +36,6 @@ export class SelectionsComponent implements OnInit, OnDestroy {
   jumpToPage: number | null = null;
 
   isSearchAnimating: boolean = false;
-
   private searchSubject = new Subject<string>();
 
   constructor(private applicationService: ApplicationService) {}
@@ -54,36 +53,40 @@ export class SelectionsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
 
-    console.log('▶️ Fetching all applications...');
-
     this.applicationService.getAllApplications().subscribe({
       next: (apps) => {
-        console.log('✅ Applications received:', apps);
-        this.allApplications = apps;
-        
-        // Filter only favorite applications
         const favoriteApps = apps.filter(app => app.favorite === true);
-        
-        const filtered = this.searchTerm
-          ? favoriteApps.filter((a) =>
-              a.appName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-              a.appDescription.toLowerCase().includes(this.searchTerm.toLowerCase())
-            )
-          : favoriteApps;
-
-        this.totalItems = filtered.length;
-        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-        const start = (this.currentPage - 1) * this.itemsPerPage;
-        this.applications = filtered.slice(start, start + this.itemsPerPage);
-        this.isLoading = false;
+        this.allApplications = favoriteApps;
+        this.applyFilters();
       },
       error: (error) => {
         console.error('❌ Failed to load applications:', error);
         this.error = error.error?.message || 'Failed to load applications';
         this.applications = [];
+        this.allApplications = [];
+        this.totalItems = 0;
+        this.totalPages = 0;
         this.isLoading = false;
-      },
+      }
     });
+  }
+
+  applyFilters(): void {
+    const filtered = this.searchTerm.trim()
+      ? this.allApplications.filter(app =>
+          app.appName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+          app.appDescription.toLowerCase().includes(this.searchTerm.toLowerCase())
+        )
+      : this.allApplications;
+
+    this.totalItems = filtered.length;
+    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    this.applications = filtered.slice(start, end);
+    this.isLoading = false;
+    this.isSearching = false;
   }
 
   onSearchInput(): void {
@@ -93,66 +96,58 @@ export class SelectionsComponent implements OnInit, OnDestroy {
   onSearch(): void {
     this.triggerSearchAnimation();
     this.currentPage = 1;
-    this.loadFavoriteApplications();
+    this.applyFilters();
+  }
+
+  private setupSearchDebounce(): void {
+    this.searchSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
+      this.currentPage = 1;
+      this.applyFilters();
+    });
   }
 
   clearSearch(): void {
     this.searchTerm = '';
     this.currentPage = 1;
-    this.loadFavoriteApplications();
+    this.applyFilters();
   }
 
   refreshApplications(): void {
-    this.clearSearch();
+    this.searchTerm = '';
+    this.currentPage = 1;
+    this.loadFavoriteApplications();
   }
 
-  private setupSearchDebounce(): void {
-    this.searchSubject
-      .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe(() => {
-        this.currentPage = 1;
-        this.loadFavoriteApplications();
-      });
-  }
-
-  private triggerSearchAnimation(): void {
+  triggerSearchAnimation(): void {
     this.isSearchAnimating = true;
-    setTimeout(() => {
-      this.isSearchAnimating = false;
-    }, 600);
+    setTimeout(() => (this.isSearchAnimating = false), 600);
   }
 
   toggleFavorite(event: Event, app: Application): void {
     event.stopPropagation();
+    app.favorite = false;
+
     this.applicationService.removeFromFavorites(app.appId).subscribe({
       next: () => {
-        // Update the app in allApplications array
-        const appIndex = this.allApplications.findIndex(a => a.appId === app.appId);
-        if (appIndex !== -1) {
-          this.allApplications[appIndex].favorite = false;
-        }
-        
-        // Remove from current view
-        this.applications = this.applications.filter(
-          (a) => a.appId !== app.appId
-        );
-        this.totalItems--;
-        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-        
+        this.allApplications = this.allApplications.filter(a => a.appId !== app.appId);
+        this.applyFilters();
+
         if (this.currentPage > this.totalPages && this.totalPages > 0) {
           this.currentPage = this.totalPages;
+          this.applyFilters();
         }
       },
       error: (error) => {
         console.error('Failed to unfavorite:', error);
+        app.favorite = true;
       },
     });
   }
 
   changePage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       this.currentPage = page;
-      this.loadFavoriteApplications();
+      this.applyFilters();
     }
   }
 
