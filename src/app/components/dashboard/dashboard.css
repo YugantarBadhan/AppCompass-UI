@@ -176,10 +176,17 @@
 .nav-item {
   border-radius: 0.5rem;
   transition: background-color 0.2s;
+  border: none !important; /* Remove any border */
+  outline: none !important; /* Remove any outline */
+  box-shadow: none !important; /* Remove any box shadow */
 }
 
+/* Only show light blue background when the item has the active class */
 .nav-item.active {
   background-color: #eff6ff;
+  border: none !important; /* Ensure no border on active state */
+  outline: none !important; /* Ensure no outline on active state */
+  box-shadow: none !important; /* Ensure no box shadow on active state */
 }
 
 .nav-link {
@@ -191,10 +198,21 @@
   color: #64748b;
   font-weight: 500;
   transition: color 0.2s;
+  border: none !important; /* Remove any border */
+  outline: none !important; /* Remove any outline */
+  box-shadow: none !important; /* Remove any box shadow */
+}
+
+.nav-link:focus {
+  outline: none !important; /* Remove focus outline */
+  box-shadow: none !important; /* Remove focus box shadow */
 }
 
 .nav-item.active .nav-link {
   color: #3b82f6;
+  border: none !important; /* Ensure no border on active state */
+  outline: none !important; /* Ensure no outline on active state */
+  box-shadow: none !important; /* Ensure no box shadow on active state */
 }
 
 .nav-icon {

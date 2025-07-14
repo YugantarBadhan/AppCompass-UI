@@ -51,8 +51,11 @@
     <aside class="sidebar">
       <nav class="sidebar-nav">
         <ul class="nav-list">
-          <li class="nav-item active">
-            <a href="#" class="nav-link">
+          <li class="nav-item" routerLinkActive="active">
+            <a
+              routerLink="app-library"
+              class="nav-link"
+            >
               <img
                 src="assets/images/applications.png"
                 alt="App Library"
@@ -61,8 +64,11 @@
               <span class="nav-text">App Library</span>
             </a>
           </li>
-          <li class="nav-item">
-            <a href="selections" class="nav-link">
+          <li class="nav-item" routerLinkActive="active">
+            <a
+              routerLink="selections"
+              class="nav-link"
+            >
               <img
                 src="assets/images/love.png"
                 alt="Selections"
@@ -94,7 +100,7 @@
 
     <!-- Main Content -->
     <main class="main-content">
-      <app-library></app-library>
+      <router-outlet></router-outlet>
     </main>
   </div>
 </div>

@@ -1,14 +1,16 @@
 import { Component, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { RouterModule, Router } from '@angular/router'; // ✅ Needed for router-outlet and routerLink
 import { Subject, takeUntil } from 'rxjs';
-import { AppLibraryComponent } from '../app-library/app-library';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, AppLibraryComponent],
+  imports: [
+    CommonModule,
+    RouterModule, // ✅ Required for <router-outlet> and routerLink in HTML
+  ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
@@ -31,18 +33,14 @@ export class DashboardComponent implements OnDestroy {
   logout(): void {
     this.isUserMenuOpen = false;
 
-    // Call server logout first
     this.authService
       .logoutFromServer()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          // Server logout successful, navigate to login
           this.router.navigate(['/login']);
         },
         error: (error) => {
-          // Even if server logout fails, still navigate to login
-          // as local data has been cleared
           console.error('Logout error:', error);
           this.router.navigate(['/login']);
         },
@@ -51,7 +49,6 @@ export class DashboardComponent implements OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
-    // Close dropdown when clicking outside
     if (this.isUserMenuOpen) {
       this.isUserMenuOpen = false;
     }
