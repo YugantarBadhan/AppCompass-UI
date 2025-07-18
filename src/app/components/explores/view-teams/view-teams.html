@@ -1,0 +1,193 @@
+<div class="teams-container">
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-container">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search teams..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchInput()"
+        (keyup.enter)="onSearch()"
+      />
+      <button
+        class="search-button"
+        (click)="onSearch()"
+        [class.searching]="isSearchAnimating"
+      >
+        <img src="assets/images/search.png" alt="Search" class="search-icon" />
+      </button>
+    </div>
+    <button
+      class="refresh-button"
+      (click)="refresh()"
+      [disabled]="isLoading"
+    >
+      <img
+        src="assets/images/refresh.png"
+        alt="Refresh"
+        class="refresh-icon"
+        [class.spinning]="isLoading"
+      />
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Loading teams...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h3 class="error-title">Something went wrong</h3>
+    <p class="error-message">{{ error }}</p>
+    <button class="retry-button" (click)="fetchTeams()">Try Again</button>
+  </div>
+
+  <!-- Teams Grid -->
+  <div *ngIf="!isLoading && !error" class="card-grid">
+    <div
+      *ngFor="let team of paginatedTeams"
+      class="flip-card"
+      [class.flipped]="flippedCardId === team.teamId"
+      [class.inactive]="!team.active"
+      (click)="flipCard(team.teamId)"
+    >
+      <div class="card-inner">
+        <!-- Front Side -->
+        <div class="card-front">
+          <div class="logo">{{ team.teamName.charAt(0) }}</div>
+          <div class="team-info">
+            <h3 class="team-name">{{ team.teamName }}</h3>
+            <p class="description">
+              {{ team.teamDescription | slice:0:97 }}{{ team.teamDescription.length > 97 ? '...' : '' }}
+            </p>
+            <div class="status" [class.inactive]="!team.active">
+              {{ team.active ? 'Active' : 'Inactive' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Back Side -->
+        <div class="card-back">
+          <button 
+            class="close-x-button" 
+            (click)="flipCard(team.teamId); $event.stopPropagation()"
+          >
+            ×
+          </button>
+          <div class="card-back-content">
+            <h3>{{ team.teamName }}</h3>
+            <div class="description-scrollable">{{ team.teamDescription }}</div>
+            <div class="status-info">
+              <p><strong>Status:</strong> {{ team.active ? 'Active' : 'Inactive' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Teams State -->
+  <div *ngIf="!isLoading && !error && paginatedTeams.length === 0" class="no-teams">
+    <div class="no-teams-icon">👥</div>
+    <h3 class="no-teams-title">No teams found</h3>
+    <p class="no-teams-message">
+      <span *ngIf="searchTerm; else noTeamsDefault">
+        No teams match your search criteria.
+      </span>
+      <ng-template #noTeamsDefault>
+        There are no teams available at the moment.
+      </ng-template>
+    </p>
+    <button 
+      *ngIf="searchTerm" 
+      class="clear-search-button" 
+      (click)="searchTerm = ''; onSearch()"
+    >
+      Clear Search
+    </button>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && !error && totalPages > 1" class="pagination">
+    <!-- First Page Button -->
+    <button
+      class="pagination-nav-button first-last"
+      (click)="changePage(1)"
+      [disabled]="currentPage === 1"
+      title="First Page"
+    >
+      ««
+    </button>
+
+    <!-- Previous Page Button -->
+    <button
+      class="pagination-nav-button"
+      (click)="changePage(currentPage - 1)"
+      [disabled]="currentPage === 1"
+      title="Previous Page"
+    >
+      ‹
+    </button>
+
+    <!-- Page Numbers -->
+    <ng-container *ngFor="let page of getVisiblePages()">
+      <button
+        *ngIf="page !== '...'"
+        class="pagination-page-button"
+        [class.active]="page === currentPage"
+        (click)="changePage(+page)"
+      >
+        {{ page }}
+      </button>
+      <span *ngIf="page === '...'" class="pagination-ellipsis">…</span>
+    </ng-container>
+
+    <!-- Next Page Button -->
+    <button
+      class="pagination-nav-button"
+      (click)="changePage(currentPage + 1)"
+      [disabled]="currentPage === totalPages"
+      title="Next Page"
+    >
+      ›
+    </button>
+
+    <!-- Last Page Button -->
+    <button
+      class="pagination-nav-button first-last"
+      (click)="changePage(totalPages)"
+      [disabled]="currentPage === totalPages"
+      title="Last Page"
+    >
+      »»
+    </button>
+
+    <!-- Page Jump -->
+    <!-- <div class="page-jump-container">
+      <span class="page-jump-text">Go to:</span>
+      <input
+        type="number"
+        class="page-jump-input"
+        [(ngModel)]="jumpToPage"
+        [min]="1"
+        [max]="totalPages"
+        placeholder="Page"
+        (keyup.enter)="jumpToPageAction()"
+      />
+      <button class="page-jump-button" (click)="jumpToPageAction()">Go</button>
+    </div>
+  </div> -->
+
+  <!-- Results Summary -->
+  <div *ngIf="!isLoading && !error && paginatedTeams.length > 0" class="results-summary">
+    <p class="summary-text">
+      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+      {{ Math.min(currentPage * itemsPerPage, getFilteredTeamsCount()) }} of 
+      {{ getFilteredTeamsCount() }} teams
+    </p>
+  </div>
+</div>

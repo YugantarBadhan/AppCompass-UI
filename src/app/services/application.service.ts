@@ -54,6 +54,24 @@ export interface PaginationParams {
   search?: string;
 }
 
+/** ▸ Team & AppSpoc interfaces for Explore tab */
+export interface Team {
+  teamId: number;
+  teamName: string;
+  teamDescription: string;
+  active: boolean;
+}
+
+export interface AppSpoc {
+  spocId: number;
+  spocName: string;
+  spocDesignation: string;
+  email: string;
+  teamId: number;
+  teamName: string;
+  active: boolean;
+}
+
 /* =====================================================
    ▸  Service
    ===================================================== */
@@ -161,24 +179,6 @@ export class ApplicationService {
       .pipe(catchError(this.handleError));
   }
 
-  createApplication(app: Omit<Application, 'appId'>) {
-    return this.http
-      .post<Application>(this.baseUrl, app, this.httpOptions)
-      .pipe(catchError(this.handleError));
-  }
-
-  updateApplication(id: number, app: Partial<Application>) {
-    return this.http
-      .put<Application>(`${this.baseUrl}/${id}`, app, this.httpOptions)
-      .pipe(catchError(this.handleError));
-  }
-
-  deleteApplication(id: number) {
-    return this.http
-      .delete<void>(`${this.baseUrl}/${id}`, this.httpOptions)
-      .pipe(catchError(this.handleError));
-  }
-
   toggleApplicationStatus(id: number) {
     return this.http
       .patch<Application>(
@@ -188,10 +188,6 @@ export class ApplicationService {
       )
       .pipe(catchError(this.handleError));
   }
-
-  /* -------------------------------------------------- */
-  /* Favourites (no user‑id in URL)                      */
-  /* -------------------------------------------------- */
 
   addToFavorites(appId: number): Observable<unknown> {
     return this.http
@@ -214,6 +210,32 @@ export class ApplicationService {
         params,
       })
       .pipe(catchError(this.handleError));
+  }
+
+  /** ▸ Get all teams for "View Teams" */
+  getAllTeams(): Observable<Team[]> {
+    return this.http
+      .get<Team[]>(`${this.baseUrl}/getAll/teams`, this.httpOptions)
+      .pipe(
+        tap((data) => console.log('Teams API Response:', data)),
+        catchError((error) => {
+          console.error('Error in getAllTeams:', error);
+          return this.handleError(error);
+        })
+      );
+  }
+
+  /** ▸ Get all application SPOCs for "View Application Spocs" */
+  getAllAppSpocs(): Observable<AppSpoc[]> {
+    return this.http
+      .get<AppSpoc[]>(`${this.baseUrl}/appspoc`, this.httpOptions)
+      .pipe(
+        tap((data) => console.log('AppSpocs API Response:', data)),
+        catchError((error) => {
+          console.error('Error in getAllAppSpocs:', error);
+          return this.handleError(error);
+        })
+      );
   }
 
   /* -------------------------------------------------- */

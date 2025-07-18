@@ -1,0 +1,26 @@
+<!-- explores.html -->
+<div class="explores-container">
+  <!-- Tab Header -->
+  <div class="tab-buttons">
+    <button
+      class="tab-button"
+      [class.active]="selectedTab === 'teams'"
+      (click)="switchTab('teams')"
+    >
+      View Teams
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="selectedTab === 'spocs'"
+      (click)="switchTab('spocs')"
+    >
+      View Application SPOCs
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <app-view-teams *ngIf="selectedTab === 'teams'"></app-view-teams>
+    <app-view-app-spocs *ngIf="selectedTab === 'spocs'"></app-view-app-spocs>
+  </div>
+</div>
