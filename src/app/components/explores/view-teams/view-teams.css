@@ -322,7 +322,7 @@
 }
 
 .status::before {
-  content: '';
+  content: "";
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -402,6 +402,17 @@
 }
 
 .card-back .status-info strong {
+  font-weight: 600;
+}
+
+/* Status Colors for Card Back */
+.active-status {
+  color: #28a745 !important;
+  font-weight: 600;
+}
+
+.inactive-status {
+  color: #6c757d !important;
   font-weight: 600;
 }
 
@@ -627,30 +638,30 @@
   .teams-container {
     padding: 1rem;
   }
-  
+
   .search-section {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .search-container {
     width: 100%;
   }
-  
+
   .card-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .flip-card {
     min-height: 220px;
   }
-  
+
   .card-front,
   .card-back {
     min-height: 220px;
   }
-  
+
   .description-scrollable {
     max-height: 120px;
   }
@@ -659,7 +670,7 @@
     flex-wrap: wrap;
     gap: 0.25rem;
   }
-  
+
   .pagination-page-button,
   .pagination-nav-button {
     min-width: 35px;
@@ -672,7 +683,7 @@
     height: 35px;
     font-size: 0.8rem;
   }
-  
+
   .page-jump-button {
     height: 35px;
     font-size: 0.8rem;

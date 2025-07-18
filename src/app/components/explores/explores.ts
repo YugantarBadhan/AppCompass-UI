@@ -6,13 +6,9 @@ import { ViewAppSpocsComponent } from './view-app-spocs/view-app-spocs';
 @Component({
   selector: 'app-explores',
   standalone: true,
-  imports: [
-    CommonModule,
-    ViewTeamsComponent,
-    ViewAppSpocsComponent
-  ],
+  imports: [CommonModule, ViewTeamsComponent, ViewAppSpocsComponent],
   templateUrl: './explores.html',
-  styleUrls: ['./explores.css']
+  styleUrls: ['./explores.css'],
 })
 export class ExploresComponent {
   selectedTab: string = 'teams';

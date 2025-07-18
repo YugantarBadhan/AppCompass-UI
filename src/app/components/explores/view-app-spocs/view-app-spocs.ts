@@ -1,14 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApplicationService, AppSpoc } from '../../../services/application.service';
+import {
+  ApplicationService,
+  AppSpoc,
+} from '../../../services/application.service';
 
 @Component({
   selector: 'app-view-app-spocs',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './view-app-spocs.html',
-  styleUrls: ['./view-app-spocs.css']
+  styleUrls: ['./view-app-spocs.css'],
 })
 export class ViewAppSpocsComponent implements OnInit {
   spocs: AppSpoc[] = [];
@@ -33,7 +36,9 @@ export class ViewAppSpocsComponent implements OnInit {
       next: (spocs) => {
         this.spocs = spocs || [];
         this.filteredSpocs = [...this.spocs];
-        this.totalPages = Math.ceil(this.filteredSpocs.length / this.itemsPerPage);
+        this.totalPages = Math.ceil(
+          this.filteredSpocs.length / this.itemsPerPage
+        );
         this.isLoading = false;
       },
       error: (error) => {
@@ -45,11 +50,12 @@ export class ViewAppSpocsComponent implements OnInit {
 
   onSearch(): void {
     const term = this.searchTerm.toLowerCase().trim();
-    this.filteredSpocs = this.spocs.filter(spoc =>
-      spoc.spocName.toLowerCase().includes(term) ||
-      spoc.spocDesignation.toLowerCase().includes(term) ||
-      spoc.email.toLowerCase().includes(term) ||
-      spoc.teamName.toLowerCase().includes(term)
+    this.filteredSpocs = this.spocs.filter(
+      (spoc) =>
+        spoc.spocName.toLowerCase().includes(term) ||
+        spoc.spocDesignation.toLowerCase().includes(term) ||
+        spoc.email.toLowerCase().includes(term) ||
+        spoc.teamName.toLowerCase().includes(term)
     );
     this.currentPage = 1;
     this.totalPages = Math.ceil(this.filteredSpocs.length / this.itemsPerPage);

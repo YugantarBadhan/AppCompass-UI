@@ -18,11 +18,7 @@
         <img src="assets/images/search.png" alt="Search" class="search-icon" />
       </button>
     </div>
-    <button
-      class="refresh-button"
-      (click)="refresh()"
-      [disabled]="isLoading"
-    >
+    <button class="refresh-button" (click)="refresh()" [disabled]="isLoading">
       <img
         src="assets/images/refresh.png"
         alt="Refresh"
@@ -62,18 +58,19 @@
           <div class="team-info">
             <h3 class="team-name">{{ team.teamName }}</h3>
             <p class="description">
-              {{ team.teamDescription | slice:0:97 }}{{ team.teamDescription.length > 97 ? '...' : '' }}
+              {{ team.teamDescription | slice : 0 : 97
+              }}{{ team.teamDescription.length > 97 ? "..." : "" }}
             </p>
             <div class="status" [class.inactive]="!team.active">
-              {{ team.active ? 'Active' : 'Inactive' }}
+              {{ team.active ? "Active" : "Inactive" }}
             </div>
           </div>
         </div>
 
         <!-- Back Side -->
         <div class="card-back">
-          <button 
-            class="close-x-button" 
+          <button
+            class="close-x-button"
             (click)="flipCard(team.teamId); $event.stopPropagation()"
           >
             ×
@@ -82,7 +79,15 @@
             <h3>{{ team.teamName }}</h3>
             <div class="description-scrollable">{{ team.teamDescription }}</div>
             <div class="status-info">
-              <p><strong>Status:</strong> {{ team.active ? 'Active' : 'Inactive' }}</p>
+              <p>
+                <strong>Status:</strong>
+                <span
+                  [class.active-status]="team.active"
+                  [class.inactive-status]="!team.active"
+                >
+                  {{ team.active ? "Active" : "Inactive" }}
+                </span>
+              </p>
             </div>
           </div>
         </div>
@@ -91,21 +96,24 @@
   </div>
 
   <!-- No Teams State -->
-  <div *ngIf="!isLoading && !error && paginatedTeams.length === 0" class="no-teams">
+  <div
+    *ngIf="!isLoading && !error && paginatedTeams.length === 0"
+    class="no-teams"
+  >
     <div class="no-teams-icon">👥</div>
     <h3 class="no-teams-title">No teams found</h3>
     <p class="no-teams-message">
       <span *ngIf="searchTerm; else noTeamsDefault">
-        No teams match your search criteria.
+        No teams match your search "{{ searchTerm }}".
       </span>
       <ng-template #noTeamsDefault>
         There are no teams available at the moment.
       </ng-template>
     </p>
-    <button 
-      *ngIf="searchTerm" 
-      class="clear-search-button" 
-      (click)="searchTerm = ''; onSearch()"
+    <button
+      *ngIf="searchTerm"
+      class="clear-search-button"
+      (click)="clearSearch()"
     >
       Clear Search
     </button>
@@ -182,12 +190,17 @@
     </div>
   </div> -->
 
-  <!-- Results Summary -->
-  <div *ngIf="!isLoading && !error && paginatedTeams.length > 0" class="results-summary">
-    <p class="summary-text">
-      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
-      {{ Math.min(currentPage * itemsPerPage, getFilteredTeamsCount()) }} of 
-      {{ getFilteredTeamsCount() }} teams
-    </p>
+    <!-- Results Summary -->
+    <div
+      *ngIf="!isLoading && !error && paginatedTeams.length > 0"
+      class="results-summary"
+    >
+      <p class="summary-text">
+        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
+        {{ Math.min(currentPage * itemsPerPage, getFilteredTeamsCount()) }} of
+        {{ getFilteredTeamsCount() }} teams
+        <span *ngIf="searchTerm"> matching "{{ searchTerm }}"</span>
+      </p>
+    </div>
   </div>
 </div>

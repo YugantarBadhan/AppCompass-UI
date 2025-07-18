@@ -23,14 +23,26 @@ export class ViewTeamsComponent implements OnInit {
   jumpToPage: number = 1;
   Math = Math;
 
-    isSearchAnimating: boolean = false; // Search animation trigger
-    private searchSubject = new Subject<string>(); // Debounce subject for searchs
-    
+  isSearchAnimating: boolean = false; // Search animation trigger
+  private searchSubject = new Subject<string>(); // Debounce subject for search
 
   constructor(private applicationService: ApplicationService) {}
 
   ngOnInit(): void {
     this.fetchTeams();
+    this.setupSearchDebounce();
+  }
+
+  private setupSearchDebounce(): void {
+    this.searchSubject
+      .pipe(
+        debounceTime(300), // Wait 300ms after user stops typing
+        distinctUntilChanged() // Only trigger if search term actually changed
+      )
+      .subscribe((searchTerm: string) => {
+        this.searchTerm = searchTerm;
+        this.performSearch();
+      });
   }
 
   fetchTeams(): void {
@@ -46,21 +58,24 @@ export class ViewTeamsComponent implements OnInit {
         console.error('Error fetching teams', err);
         this.error = 'Failed to load teams. Please try again.';
         this.isLoading = false;
-      }
+      },
     });
   }
 
   onSearch(): void {
+    this.performSearch();
+  }
+
+  onSearchInput(): void {
+    // Emit search term to debounced subject
+    this.searchSubject.next(this.searchTerm);
+  }
+
+  private performSearch(): void {
     this.currentPage = 1;
     this.updatePagination();
     this.triggerSearchAnimation();
   }
-
-  onSearchInput(): void {
-    this.searchSubject.next(this.searchTerm);
-  }
-
-  
 
   private triggerSearchAnimation(): void {
     this.isSearchAnimating = true;
@@ -70,7 +85,7 @@ export class ViewTeamsComponent implements OnInit {
   }
 
   updatePagination(): void {
-    const filtered = this.teams.filter(team =>
+    const filtered = this.teams.filter((team) =>
       team.teamName.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
     const start = (this.currentPage - 1) * this.itemsPerPage;
@@ -79,7 +94,7 @@ export class ViewTeamsComponent implements OnInit {
   }
 
   get totalPages(): number {
-    const filtered = this.teams.filter(team =>
+    const filtered = this.teams.filter((team) =>
       team.teamName.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
     return Math.ceil(filtered.length / this.itemsPerPage);
@@ -97,11 +112,17 @@ export class ViewTeamsComponent implements OnInit {
   refresh(): void {
     this.searchTerm = '';
     this.currentPage = 1;
-    this.fetchTeams();
+    this.updatePagination(); // Update pagination after clearing search
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.currentPage = 1;
+    this.updatePagination();
   }
 
   getFilteredTeamsCount(): number {
-    return this.teams.filter(team =>
+    return this.teams.filter((team) =>
       team.teamName.toLowerCase().includes(this.searchTerm.toLowerCase())
     ).length;
   }
