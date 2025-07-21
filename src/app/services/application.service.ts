@@ -238,6 +238,23 @@ export class ApplicationService {
       );
   }
 
+  //** ▸ Get all applications for a specific team: "View Applications by Team" */
+  getAllAppByTeam(teamName: string): Observable<any> {
+    const url = `${this.baseUrl}/filterByTeamName?name=${encodeURIComponent(
+      teamName
+    )}`;
+
+    return this.http.get(url, this.httpOptions).pipe(
+      tap((data) =>
+        console.log('Filtered Applications by Team Response:', data)
+      ),
+      catchError((error) => {
+        console.error('Error in getAllAppByTeam:', error);
+        return this.handleError(error);
+      })
+    );
+  }
+
   /* -------------------------------------------------- */
   /* Error handler                                      */
   /* -------------------------------------------------- */
