@@ -1,11 +1,11 @@
 /* Prevent full-page scroll by default */
-html,
+/* html,
 body {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow: auto;
-}
+} */
 
 /* Fullscreen Flex Centering */
 .auth-container {
