@@ -1,1 +1,158 @@
-<p>view-app-by-appspocs works!</p>
+<div class="view-app-by-appspocs-container">
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search by spoc name..." [(ngModel)]="searchTerm"
+                (input)="onSearchInput()" (keyup.enter)="onSearch()" />
+            <button class="search-button" (click)="onSearch()" [class.searching]="isSearchAnimating">
+                <img src="assets/images/search.png" alt="Search" class="search-icon" />
+            </button>
+        </div>
+        <button class="refresh-button" (click)="refreshApplications()" [disabled]="isLoading">
+            <img src="assets/images/refresh.png" alt="Refresh" class="refresh-icon" [class.spinning]="isLoading" />
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading && !error" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading applications...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="error-container">
+        <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3 class="error-title">No applications found for the provided spoc name.</h3>
+        <!-- <p class="error-message">{{ error }}</p> -->
+        <button class="retry-button" (click)="refreshApplications()">
+            <i class="fas fa-redo"></i> Try Again
+        </button>
+    </div>
+
+    <!-- Application Cards -->
+    <div *ngIf="!isLoading && !error && applications.length > 0" class="applications-grid">
+        <div *ngFor="let app of paginatedApplications" class="application-card"
+            [class.flipped]="flippedCardId === app.appId" [class.inactive]="!app.active"
+            [class.disabled]="isAnyCardFlipped() && flippedCardId !== app.appId">
+            <div class="card-inner" (click)="handleCardClick(app.appId)">
+                <!-- Card Front -->
+                <div class="card-face card-front">
+
+                    <div class="app-icon" [style.background]="getApplicationGradient(app)">
+                        <i *ngIf="app.icon" [class]="'fas fa-' + app.icon"></i>
+                        <span *ngIf="!app.icon" class="app-initials">{{
+                            getApplicationIcon(app)
+                            }}</span>
+                    </div>
+                    <div class="app-info">
+                        <h3 class="app-name">{{ app.appName }}</h3>
+                        <p class="app-description">
+                            {{ app.appDescription | slice : 0 : 97
+                            }}{{ app.appDescription.length > 97 ? "..." : "" }}
+                        </p>
+                        <div class="app-status">
+                            <span class="status-indicator" [class.active]="app.active"
+                                [class.inactive]="!app.active"></span>
+                            <span class="status-text">{{
+                                app.active ? "Active" : "Inactive"
+                                }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Back -->
+                <div class="card-face card-back">
+                    <button class="close-x-button" (click)="closeFlip($event)" title="Close">
+                        ×
+                    </button>
+                    <div class="card-back-content">
+                        <h3>{{ app.appName }}</h3>
+                        <div class="card-back-description">{{ app.appDescription }}</div>
+                        <div class="status-info">
+                            <p>
+                                Status:
+                                <strong [style.color]="app.active ? '#28a745' : '#6c757d'">
+                                    {{ app.active ? "Active" : "Inactive" }}
+                                </strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Results - Application does not exist -->
+    <div *ngIf="!isLoading && !error && applications.length === 0" class="no-applications">
+        <div class="no-apps-icon"><i class="fas fa-search"></i></div>
+        <h3 class="no-apps-title">Application does not exist</h3>
+        <p class="no-apps-message">
+            <span *ngIf="searchTerm">No applications match your search "{{ searchTerm }}".</span>
+            <span *ngIf="!searchTerm">No applications are available at the moment.</span>
+        </p>
+        <button *ngIf="searchTerm" class="clear-search-button" (click)="clearSearch()">
+            Clear Search
+        </button>
+    </div>
+
+    <!-- Enhanced Pagination with Smart Navigation -->
+    <div class="pagination" *ngIf="!isLoading && !error && totalItems > 0 && totalPages > 1">
+        <!-- First Page Button -->
+        <button class="pagination-nav-button first-last" (click)="goToFirstPage()" [disabled]="currentPage === 1"
+            title="First page">
+            ⇤
+        </button>
+
+        <!-- Previous Page Button -->
+        <button class="pagination-nav-button" (click)="goToPreviousPage()" [disabled]="currentPage === 1"
+            title="Previous page">
+            ‹
+        </button>
+
+        <!-- Page Numbers with Smart Display -->
+        <ng-container *ngFor="let item of paginationItems">
+            <!-- Page Number Button -->
+            <button *ngIf="item.type === 'page'" [class.active]="currentPage === item.value"
+                (click)="changePage(item.value)" class="pagination-page-button" [title]="'Go to page ' + item.value">
+                {{ item.value }}
+            </button>
+
+            <!-- Ellipsis -->
+            <span *ngIf="item.type === 'ellipsis'" class="pagination-ellipsis" title="More pages">
+                ...
+            </span>
+        </ng-container>
+
+        <!-- Next Page Button -->
+        <button class="pagination-nav-button" (click)="goToNextPage()" [disabled]="currentPage === totalPages"
+            title="Next page">
+            ›
+        </button>
+
+        <!-- Last Page Button -->
+        <button class="pagination-nav-button first-last" (click)="goToLastPage()"
+            [disabled]="currentPage === totalPages" title="Last page">
+            ⇥
+        </button>
+
+        <!-- Quick Jump (only show if more than 10 pages) -->
+        <div class="page-jump-container" *ngIf="totalPages > 10">
+            <span class="page-jump-text">Go to:</span>
+            <input type="number" class="page-jump-input" [(ngModel)]="jumpToPage" [min]="1" [max]="totalPages"
+                (keyup.enter)="performPageJump()" placeholder="{{ currentPage }}" />
+            <button class="page-jump-button" (click)="performPageJump()"
+                [disabled]="!jumpToPage || jumpToPage < 1 || jumpToPage > totalPages">
+                Go
+            </button>
+        </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="results-summary" *ngIf="!isLoading && !error && totalItems > 0">
+        <p class="summary-text">
+            Showing {{ resultsStartIndex }} to {{ resultsEndIndex }} of
+            {{ totalItems }} applications
+            <span *ngIf="searchTerm"> matching "{{ searchTerm }}"</span>
+        </p>
+    </div>
+</div>

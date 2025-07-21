@@ -255,6 +255,23 @@ export class ApplicationService {
     );
   }
 
+  //** ▸ Get all applications for a specific spocs: "View Applications by SPOCs" */
+  getAllAppBySpocs(appSpocName: string): Observable<any> {
+    const url = `${this.baseUrl}/filterBySpocName?name=${encodeURIComponent(
+      appSpocName
+    )}`;
+
+    return this.http.get(url, this.httpOptions).pipe(
+      tap((data) =>
+        console.log('Filtered Applications by Spoc Response:', data)
+      ),
+      catchError((error) => {
+        console.error('Error in getAllAppBySpocs:', error);
+        return this.handleError(error);
+      })
+    );
+  }
+
   /* -------------------------------------------------- */
   /* Error handler                                      */
   /* -------------------------------------------------- */

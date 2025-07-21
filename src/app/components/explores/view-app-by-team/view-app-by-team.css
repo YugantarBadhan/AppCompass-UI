@@ -1,8 +1,8 @@
 /* ---------- Main Container ---------- */
-.app-library-container {
+.view-app-by-team-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
