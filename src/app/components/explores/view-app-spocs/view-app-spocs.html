@@ -1,0 +1,156 @@
+<div class="appspocs-container">
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search application spocs..." [(ngModel)]="searchTerm"
+                (input)="onSearchInput()" (keyup.enter)="onSearch()" />
+            <button class="search-button" (click)="onSearch()" [class.searching]="isSearchAnimating">
+                <img src="assets/images/search.png" alt="Search" class="search-icon" />
+            </button>
+        </div>
+        <button class="refresh-button" (click)="refresh()" [disabled]="isLoading">
+            <img src="assets/images/refresh.png" alt="Refresh" class="refresh-icon" [class.spinning]="isLoading" />
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading application spocs...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h3 class="error-title">Something went wrong</h3>
+        <p class="error-message">{{ error }}</p>
+        <button class="retry-button" (click)="fetchAppSpocs()">Try Again</button>
+    </div>
+
+    <!-- Application Spocs Grid -->
+    <div *ngIf="!isLoading && !error" class="card-grid">
+        <div *ngFor="let appspoc of paginatedAppSpocs" class="flip-card"
+            [class.flipped]="flippedCardId === appspoc.spocId" [class.inactive]="!appspoc.active"
+            (click)="flipCard(appspoc.spocId)">
+            <div class="card-inner">
+                <!-- Front Side -->
+                <div class="card-front">
+                    <div class="logo">{{ appspoc.spocName.charAt(0) }}</div>
+                    <div class="appspoc-info">
+                        <h3 class="appspoc-name">{{ appspoc.spocName }}</h3>
+                        <p class="appspoc-designation">
+                            <strong>Designation:</strong>
+                            {{ appspoc.spocDesignation }}
+                        </p>
+                        <p class="appspoc-team">
+                            <strong>Team Name:</strong>
+                            {{ appspoc.teamName }}
+                        </p>
+                        <div class="status" [class.inactive]="!appspoc.active">
+                            {{ appspoc.active ? "Active" : "Inactive" }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Back Side -->
+                <div class="card-back">
+                    <button class="close-x-button" (click)="flipCard(appspoc.spocId); $event.stopPropagation()">
+                        ×
+                    </button>
+                    <div class="card-back-content">
+                        <h3 class="back-name">{{ appspoc.spocName }}</h3>
+                        <div class="back-designation">
+                            <p>
+                                <strong>Designation:</strong>
+                                {{ appspoc.spocDesignation }}
+                            </p>
+                        </div>
+                        <div class="appspoc-email">
+                            <p>
+                                <strong>Email: </strong><a href="mailto:{{ appspoc.email }}"
+                                    (click)="$event.stopPropagation()">{{ appspoc.email }}</a>
+                            </p>
+                        </div>
+                        <div class="back-team">
+                            <p>
+                                <strong>Team Name:</strong>
+                                {{ appspoc.teamName }}
+                            </p>
+                        </div>
+                        <div class="status-info">
+                            <p>
+                                <strong>Status:</strong>
+                                <span [class.active-status]="appspoc.active" [class.inactive-status]="!appspoc.active">
+                                    {{ appspoc.active ? "Active" : "Inactive" }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Application Spocs State -->
+        <div *ngIf="!isLoading && !error && paginatedAppSpocs.length === 0" class="no-appspocs">
+            <div class="no-appspocs-icon">👥</div>
+            <h3 class="no-appspocs-title">No application spocs found</h3>
+            <p class="no-appspocs-message">
+                <span *ngIf="searchTerm; else noAppSpocsDefault">
+                    No application spocs match your search "{{ searchTerm }}".
+                </span>
+                <ng-template #noAppSpocsDefault>
+                    There are no application spocs available at the moment.
+                </ng-template>
+            </p>
+            <button *ngIf="searchTerm" class="clear-search-button" (click)="clearSearch()">
+                Clear Search
+            </button>
+        </div>
+    </div>
+
+    <!-- Pagination - Moved outside and centered -->
+    <div *ngIf="!isLoading && !error && totalPages > 1" class="pagination">
+        <!-- First Page Button -->
+        <button class="pagination-nav-button first-last" (click)="changePage(1)" [disabled]="currentPage === 1"
+            title="First Page">
+            ⇤
+        </button>
+
+        <!-- Previous Page Button -->
+        <button class="pagination-nav-button" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1"
+            title="Previous Page">
+            ‹
+        </button>
+
+        <!-- Page Numbers -->
+        <ng-container *ngFor="let page of getVisiblePages()">
+            <button *ngIf="page !== '...'" class="pagination-page-button" [class.active]="page === currentPage"
+                (click)="changePage(+page)">
+                {{ page }}
+            </button>
+            <span *ngIf="page === '...'" class="pagination-ellipsis">...</span>
+        </ng-container>
+
+        <!-- Next Page Button -->
+        <button class="pagination-nav-button" (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages" title="Next Page">
+            ›
+        </button>
+
+        <!-- Last Page Button -->
+        <button class="pagination-nav-button first-last" (click)="changePage(totalPages)"
+            [disabled]="currentPage === totalPages" title="Last Page">
+            ⇥
+        </button>
+    </div>
+
+    <!-- Results Summary -->
+    <div *ngIf="paginatedAppSpocs.length > 0" class="results-summary">
+        <p class="summary-text">
+            Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
+            {{ Math.min(currentPage * itemsPerPage, getFilteredAppSpocsCount()) }} of
+            {{ getFilteredAppSpocsCount() }} appspocs
+            <span *ngIf="searchTerm"> matching "{{ searchTerm }}"</span>
+        </p>
+    </div>
+</div>
