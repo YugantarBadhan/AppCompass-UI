@@ -2,29 +2,14 @@
   <!-- Search Section -->
   <div class="search-section">
     <div class="search-container">
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Search teams..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearchInput()"
-        (keyup.enter)="onSearch()"
-      />
-      <button
-        class="search-button"
-        (click)="onSearch()"
-        [class.searching]="isSearchAnimating"
-      >
+      <input type="text" class="search-input" placeholder="Search teams..." [(ngModel)]="searchTerm"
+        (input)="onSearchInput()" (keyup.enter)="onSearch()" />
+      <button class="search-button" (click)="onSearch()" [class.searching]="isSearchAnimating">
         <img src="assets/images/search.png" alt="Search" class="search-icon" />
       </button>
     </div>
     <button class="refresh-button" (click)="refresh()" [disabled]="isLoading">
-      <img
-        src="assets/images/refresh.png"
-        alt="Refresh"
-        class="refresh-icon"
-        [class.spinning]="isLoading"
-      />
+      <img src="assets/images/refresh.png" alt="Refresh" class="refresh-icon" [class.spinning]="isLoading" />
     </button>
   </div>
 
@@ -44,13 +29,8 @@
 
   <!-- Teams Grid -->
   <div *ngIf="!isLoading && !error" class="card-grid">
-    <div
-      *ngFor="let team of paginatedTeams"
-      class="flip-card"
-      [class.flipped]="flippedCardId === team.teamId"
-      [class.inactive]="!team.active"
-      (click)="flipCard(team.teamId)"
-    >
+    <div *ngFor="let team of paginatedTeams" class="flip-card" [class.flipped]="flippedCardId === team.teamId"
+      [class.inactive]="!team.active" (click)="flipCard(team.teamId)">
       <div class="card-inner">
         <!-- Front Side -->
         <div class="card-front">
@@ -69,10 +49,7 @@
 
         <!-- Back Side -->
         <div class="card-back">
-          <button
-            class="close-x-button"
-            (click)="flipCard(team.teamId); $event.stopPropagation()"
-          >
+          <button class="close-x-button" (click)="flipCard(team.teamId); $event.stopPropagation()">
             ×
           </button>
           <div class="card-back-content">
@@ -81,10 +58,7 @@
             <div class="status-info">
               <p>
                 <strong>Status:</strong>
-                <span
-                  [class.active-status]="team.active"
-                  [class.inactive-status]="!team.active"
-                >
+                <span [class.active-status]="team.active" [class.inactive-status]="!team.active">
                   {{ team.active ? "Active" : "Inactive" }}
                 </span>
               </p>
@@ -96,10 +70,7 @@
   </div>
 
   <!-- No Teams State -->
-  <div
-    *ngIf="!isLoading && !error && paginatedTeams.length === 0"
-    class="no-teams"
-  >
+  <div *ngIf="!isLoading && !error && paginatedTeams.length === 0" class="no-teams">
     <div class="no-teams-icon">👥</div>
     <h3 class="no-teams-title">No teams found</h3>
     <p class="no-teams-message">
@@ -110,11 +81,7 @@
         There are no teams available at the moment.
       </ng-template>
     </p>
-    <button
-      *ngIf="searchTerm"
-      class="clear-search-button"
-      (click)="clearSearch()"
-    >
+    <button *ngIf="searchTerm" class="clear-search-button" (click)="clearSearch()">
       Clear Search
     </button>
   </div>
@@ -122,85 +89,46 @@
   <!-- Pagination -->
   <div *ngIf="!isLoading && !error && totalPages > 1" class="pagination">
     <!-- First Page Button -->
-    <button
-      class="pagination-nav-button first-last"
-      (click)="changePage(1)"
-      [disabled]="currentPage === 1"
-      title="First Page"
-    >
-      ««
+    <button class="pagination-nav-button first-last" (click)="changePage(1)" [disabled]="currentPage === 1"
+      title="First Page">
+      ⇤
     </button>
 
     <!-- Previous Page Button -->
-    <button
-      class="pagination-nav-button"
-      (click)="changePage(currentPage - 1)"
-      [disabled]="currentPage === 1"
-      title="Previous Page"
-    >
+    <button class="pagination-nav-button" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1"
+      title="Previous Page">
       ‹
     </button>
 
     <!-- Page Numbers -->
     <ng-container *ngFor="let page of getVisiblePages()">
-      <button
-        *ngIf="page !== '...'"
-        class="pagination-page-button"
-        [class.active]="page === currentPage"
-        (click)="changePage(+page)"
-      >
+      <button *ngIf="page !== '...'" class="pagination-page-button" [class.active]="page === currentPage"
+        (click)="changePage(+page)">
         {{ page }}
       </button>
-      <span *ngIf="page === '...'" class="pagination-ellipsis">…</span>
+      <span *ngIf="page === '...'" class="pagination-ellipsis">...</span>
     </ng-container>
 
     <!-- Next Page Button -->
-    <button
-      class="pagination-nav-button"
-      (click)="changePage(currentPage + 1)"
-      [disabled]="currentPage === totalPages"
-      title="Next Page"
-    >
+    <button class="pagination-nav-button" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages"
+      title="Next Page">
       ›
     </button>
 
     <!-- Last Page Button -->
-    <button
-      class="pagination-nav-button first-last"
-      (click)="changePage(totalPages)"
-      [disabled]="currentPage === totalPages"
-      title="Last Page"
-    >
-      »»
+    <button class="pagination-nav-button first-last" (click)="changePage(totalPages)"
+      [disabled]="currentPage === totalPages" title="Last Page">
+      ⇥
     </button>
+  </div>
 
-    <!-- Page Jump -->
-    <!-- <div class="page-jump-container">
-      <span class="page-jump-text">Go to:</span>
-      <input
-        type="number"
-        class="page-jump-input"
-        [(ngModel)]="jumpToPage"
-        [min]="1"
-        [max]="totalPages"
-        placeholder="Page"
-        (keyup.enter)="jumpToPageAction()"
-      />
-      <button class="page-jump-button" (click)="jumpToPageAction()">Go</button>
-    </div>
-  </div> -->
-
-    <!-- Results Summary -->
-    <div
-      *ngIf="!isLoading && !error && paginatedTeams.length > 0"
-      class="results-summary"
-    >
-      <p class="summary-text">
-        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
-        {{ Math.min(currentPage * itemsPerPage, getFilteredTeamsCount()) }} of
-        {{ getFilteredTeamsCount() }} teams
-        <span *ngIf="searchTerm"> matching "{{ searchTerm }}"</span>
-      </p>
-    </div>
+  <!-- Results Summary - Moved outside pagination div -->
+  <div *ngIf="!isLoading && !error && paginatedTeams.length > 0" class="results-summary">
+    <p class="summary-text">
+      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
+      {{ Math.min(currentPage * itemsPerPage, getFilteredTeamsCount()) }} of
+      {{ getFilteredTeamsCount() }} teams
+      <span *ngIf="searchTerm"> matching "{{ searchTerm }}"</span>
+    </p>
   </div>
 </div>
