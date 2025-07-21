@@ -16,11 +16,27 @@
     >
       View Application SPOCs
     </button>
+    <button
+      class="tab-button"
+      [class.active]="selectedTab === 'appteam'"
+      (click)="switchTab('appteam')"
+    >
+      View Applications by Team
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="selectedTab === 'appspocs'"
+      (click)="switchTab('appspocs')"
+    >
+      View Applications by SPOCs
+    </button>
   </div>
 
   <!-- Tab Content -->
   <div class="tab-content">
     <app-view-teams *ngIf="selectedTab === 'teams'"></app-view-teams>
     <app-view-app-spocs *ngIf="selectedTab === 'spocs'"></app-view-app-spocs>
+    <app-view-app-by-team *ngIf="selectedTab === 'appteam'"></app-view-app-by-team>
+    <app-view-app-by-appspocs *ngIf="selectedTab === 'appspocs'"></app-view-app-by-appspocs>
   </div>
 </div>
