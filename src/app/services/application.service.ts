@@ -21,6 +21,7 @@ export interface Application {
   icon?: string;
   initials?: string;
   gradientColors?: string[];
+  email?: string[];
 }
 
 export interface ApplicationDetails {

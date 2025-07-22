@@ -34,6 +34,10 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
 
   flippedCardId: number | null = null; // Card flip state
 
+  // Spoc contact state
+  showSpocPopup: boolean = false;
+  spocPopupMessage: string = '';
+
   private supportsPagination: boolean = true; // Whether backend supports pagination
   private supportsSearch: boolean = true; // Whether backend supports search
 
@@ -72,11 +76,55 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
       },
     });
   }
+
   /**
    * Check if application is favorite - uses backend-provided field
    */
   isFavorite(app: Application): boolean {
     return app.favorite === true;
+  }
+
+  /**
+   * Handle Contact Spoc button click
+   */
+  contactSpoc(event: Event, app: Application): void {
+    event.stopPropagation();
+
+    // Check if email array exists and has emails
+    if (!app.email || !Array.isArray(app.email) || app.email.length === 0) {
+      // Show popup for no emails
+      this.spocPopupMessage = 'No Spoc assigned to this application.';
+      this.showSpocPopup = true;
+      return;
+    }
+
+    // Filter out empty emails and create comma-separated string
+    const validEmails = app.email.filter(
+      (email) => email && email.trim() !== ''
+    );
+
+    if (validEmails.length === 0) {
+      this.spocPopupMessage =
+        'No valid Spoc email assigned to this application.';
+      this.showSpocPopup = true;
+      return;
+    }
+
+    // Create mailto link with comma-separated emails
+    const emailList = validEmails.join(',');
+    const subject = encodeURIComponent(`Regarding ${app.appName} Application`);
+    const mailtoUrl = `mailto:${emailList}?subject=${subject}`;
+
+    // Open default email client
+    window.location.href = mailtoUrl;
+  }
+
+  /**
+   * Close the Spoc popup
+   */
+  closeSpocPopup(): void {
+    this.showSpocPopup = false;
+    this.spocPopupMessage = '';
   }
 
   private setupSearchDebounce(): void {
