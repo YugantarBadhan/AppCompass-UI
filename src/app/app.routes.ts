@@ -4,7 +4,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { AppLibraryComponent } from './components/app-library/app-library';
 import { SelectionsComponent } from './components/selections/selections';
 import { ExploresComponent } from './components/explores/explores';
-import { ApplicationsComponent } from './components/applications/applications';
+import { ApplicationsComponent } from './components/applications-management/applications-management';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
