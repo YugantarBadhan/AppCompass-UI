@@ -1,0 +1,300 @@
+<div class="applications-container">
+    <div class="applications-header">
+        <h1 class="page-title">Applications Management</h1>
+        <p class="page-description">
+            Manage your applications with registration, updates, and status controls
+        </p>
+    </div>
+
+    <!-- Loading Applications -->
+    <div *ngIf="isLoadingApplications" class="loading-container">
+        <div class="loading-spinner-large"></div>
+        <span>Loading applications...</span>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation" *ngIf="!isLoadingApplications">
+        <button class="tab-btn" [class.active]="activeTab === 'register'" (click)="setActiveTab('register')">
+            <i class="icon">📝</i>
+            <span>Register</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'update'" (click)="setActiveTab('update')">
+            <i class="icon">✏️</i>
+            <span>Update</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'deactivate'" (click)="setActiveTab('deactivate')">
+            <i class="icon">⏸️</i>
+            <span>Deactivate</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'reactivate'" (click)="setActiveTab('reactivate')">
+            <i class="icon">▶️</i>
+            <span>Re-activate</span>
+        </button>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div class="message-container" *ngIf="!isLoadingApplications">
+        <div *ngIf="successMessage" class="alert alert-success">
+            <div class="alert-icon">✓</div>
+            <span>{{ successMessage }}</span>
+            <button class="alert-close" (click)="clearMessages()">×</button>
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-error">
+            <div class="alert-icon">✗</div>
+            <span>{{ errorMessage }}</span>
+            <button class="alert-close" (click)="clearMessages()">×</button>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" *ngIf="!isLoadingApplications">
+        <!-- Register Tab -->
+        <div *ngIf="activeTab === 'register'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Register New Application</h2>
+                    <p class="form-subtitle">Add a new application to the system</p>
+                </div>
+
+                <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()" class="application-form">
+                    <div class="form-group">
+                        <label for="appName" class="form-label">
+                            Application Name <span class="required">*</span>
+                        </label>
+                        <input type="text" id="appName" formControlName="appName" class="form-input"
+                            [class.error]="isFieldInvalid(registerForm, 'appName')"
+                            placeholder="Enter application name" />
+                        <div *ngIf="isFieldInvalid(registerForm, 'appName')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(registerForm, "appName") }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appDescription" class="form-label">
+                            Application Description <span class="required">*</span>
+                        </label>
+                        <textarea id="appDescription" formControlName="appDescription" class="form-textarea"
+                            [class.error]="isFieldInvalid(registerForm, 'appDescription')"
+                            placeholder="Enter detailed description of your application" rows="4">
+                        </textarea>
+                        <div *ngIf="isFieldInvalid(registerForm, 'appDescription')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(registerForm, "appDescription") }}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" [disabled]="isLoading || registerForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">📝</i>
+                            {{ isLoading ? "Registering..." : "Register Application" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Update Tab -->
+        <div *ngIf="activeTab === 'update'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Update Application</h2>
+                    <p class="form-subtitle">Modify existing application details</p>
+                </div>
+
+                <form [formGroup]="updateForm" (ngSubmit)="onUpdateSubmit()" class="application-form">
+                    <!-- Application Dropdown -->
+                    <div class="form-group">
+                        <label for="updateAppSelect" class="form-label">
+                            Applications <span class="required">*</span>
+                        </label>
+                        <select id="updateAppSelect" formControlName="selectedAppId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(updateForm, 'selectedAppId')"
+                                (change)="onUpdateApplicationSelect($event)">
+                            <option value="">Select an application...</option>
+                            <option *ngFor="let app of applications; trackBy: trackByAppId" 
+                                    [value]="app.appId">
+                                {{ app.appName }} ({{ app.active ? 'Active' : 'Inactive' }})
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(updateForm, 'selectedAppId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "selectedAppId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected Application Info -->
+                    <div *ngIf="getSelectedUpdateApplication()" class="selected-app-info">
+                        <div class="selected-app-card">
+                            <div class="selected-app-header">
+                                <h4>Selected Application</h4>
+                                <span class="app-id-badge">ID: {{ getSelectedUpdateApplication()?.appId }}</span>
+                            </div>
+                            <p class="selected-app-name">{{ getSelectedUpdateApplication()?.appName }}</p>
+                        </div>
+                    </div>
+
+                    <!-- App Name -->
+                    <div class="form-group">
+                        <label for="updateAppName" class="form-label">
+                            Application Name <span class="required">*</span>
+                        </label>
+                        <input type="text" id="updateAppName" formControlName="appName" class="form-input"
+                            [class.error]="isFieldInvalid(updateForm, 'appName')"
+                            placeholder="Enter new application name" />
+                        <div *ngIf="isFieldInvalid(updateForm, 'appName')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "appName") }}
+                        </div>
+                    </div>
+
+                    <!-- App Description -->
+                    <div class="form-group">
+                        <label for="updateAppDescription" class="form-label">
+                            Application Description <span class="required">*</span>
+                        </label>
+                        <textarea id="updateAppDescription" formControlName="appDescription" class="form-textarea"
+                            [class.error]="isFieldInvalid(updateForm, 'appDescription')"
+                            placeholder="Enter updated description" rows="4">
+                        </textarea>
+                        <div *ngIf="isFieldInvalid(updateForm, 'appDescription')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "appDescription") }}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" [disabled]="isLoading || updateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">✏️</i>
+                            {{ isLoading ? "Updating..." : "Update Application" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Deactivate Tab -->
+        <div *ngIf="activeTab === 'deactivate'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Deactivate Application</h2>
+                    <p class="form-subtitle">Temporarily disable an active application</p>
+                </div>
+
+                <form [formGroup]="deactivateForm" (ngSubmit)="onDeactivateSubmit()" class="application-form">
+                    <!-- Application Dropdown -->
+                    <div class="form-group">
+                        <label for="deactivateAppSelect" class="form-label">
+                            Active Applications <span class="required">*</span>
+                        </label>
+                        <select id="deactivateAppSelect" formControlName="selectedAppId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(deactivateForm, 'selectedAppId')"
+                                (change)="onDeactivateApplicationSelect($event)">
+                            <option value="">Select an active application...</option>
+                            <option *ngFor="let app of activeApplications; trackBy: trackByAppId" 
+                                    [value]="app.appId">
+                                {{ app.appName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(deactivateForm, 'selectedAppId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(deactivateForm, "selectedAppId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected Application Info -->
+                    <div *ngIf="getSelectedDeactivateApplication()" class="selected-app-info">
+                        <div class="selected-app-card">
+                            <div class="selected-app-header">
+                                <h4>Selected Application</h4>
+                                <span class="app-id-badge">ID: {{ getSelectedDeactivateApplication()?.appId }}</span>
+                            </div>
+                            <p class="selected-app-name">{{ getSelectedDeactivateApplication()?.appName }}</p>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-content">
+                            <strong>Warning:</strong> Deactivating an application will make it
+                            unavailable to users. This action can be reversed by reactivating
+                            the application.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-warning" [disabled]="isLoading || deactivateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">⏸️</i>
+                            {{ isLoading ? "Deactivating..." : "Deactivate Application" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Reactivate Tab -->
+        <div *ngIf="activeTab === 'reactivate'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Reactivate Application</h2>
+                    <p class="form-subtitle">Restore an inactive application to active status</p>
+                </div>
+
+                <form [formGroup]="reactivateForm" (ngSubmit)="onReactivateSubmit()" class="application-form">
+                    <!-- Application Dropdown -->
+                    <div class="form-group">
+                        <label for="reactivateAppSelect" class="form-label">
+                            Inactive Applications <span class="required">*</span>
+                        </label>
+                        <select id="reactivateAppSelect" formControlName="selectedAppId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(reactivateForm, 'selectedAppId')"
+                                (change)="onReactivateApplicationSelect($event)">
+                            <option value="">Select an inactive application...</option>
+                            <option *ngFor="let app of inactiveApplications; trackBy: trackByAppId" 
+                                    [value]="app.appId">
+                                {{ app.appName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(reactivateForm, 'selectedAppId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(reactivateForm, "selectedAppId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected Application Info -->
+                    <div *ngIf="getSelectedReactivateApplication()" class="selected-app-info">
+                        <div class="selected-app-card">
+                            <div class="selected-app-header">
+                                <h4>Selected Application</h4>
+                                <span class="app-id-badge">ID: {{ getSelectedReactivateApplication()?.appId }}</span>
+                            </div>
+                            <p class="selected-app-name">{{ getSelectedReactivateApplication()?.appName }}</p>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-icon">ℹ️</div>
+                        <div class="info-content">
+                            <strong>Info:</strong> Reactivating an application will make it
+                            available to users again.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success" [disabled]="isLoading || reactivateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">▶️</i>
+                            {{ isLoading ? "Reactivating..." : "Reactivate Application" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
