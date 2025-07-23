@@ -4,7 +4,8 @@ import { AuthGuard } from './guards/auth.guard';
 import { AppLibraryComponent } from './components/app-library/app-library';
 import { SelectionsComponent } from './components/selections/selections';
 import { ExploresComponent } from './components/explores/explores';
-import { ApplicationsComponent } from './components/applications-management/applications-management';
+import { ApplicationsManagementComponent } from './components/applications-management/applications-management';
+import { TeamsManagementComponent } from './components/teams-management/teams-management';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -20,7 +21,8 @@ export const routes: Routes = [
       { path: 'app-library', component: AppLibraryComponent },
       { path: 'selections', component: SelectionsComponent },
       { path: 'explores', component: ExploresComponent },
-      { path: 'applications', component: ApplicationsComponent },
+      { path: 'applications-management', component: ApplicationsManagementComponent },
+      { path: 'teams-management', component: TeamsManagementComponent },
     ],
   },
 

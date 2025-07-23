@@ -14,10 +14,10 @@ interface Application {
   selector: 'app-applications',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './applications.html',
-  styleUrl: './applications.css'
+  templateUrl: './applications-management.html',
+  styleUrl: './applications-management.css'
 })
-export class ApplicationsComponent implements OnInit {
+export class ApplicationsManagementComponent implements OnInit {
   activeTab: string = 'register';
   registerForm!: FormGroup;
   updateForm!: FormGroup;

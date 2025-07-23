@@ -249,7 +249,9 @@
 } */
 
 .developer-icon {
-  font-size: 1rem;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .developer-text {

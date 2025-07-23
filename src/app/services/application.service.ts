@@ -80,7 +80,7 @@ export interface AppSpoc {
 export class ApplicationService {
   private readonly baseUrl = `${environment.apiUrl}/applications`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   /* -------------------------------------------------- */
   /* Helpers                                            */
@@ -180,27 +180,6 @@ export class ApplicationService {
       .pipe(catchError(this.handleError));
   }
 
-  // Updated methods for deactivate and reactivate
-  deactivateApplication(id: number): Observable<Application> {
-    return this.http
-      .patch<Application>(
-        `${this.baseUrl}/deactivate/${id}`,
-        {},
-        this.httpOptions
-      )
-      .pipe(catchError(this.handleError));
-  }
-
-  reactivateApplication(id: number): Observable<Application> {
-    return this.http
-      .patch<Application>(
-        `${this.baseUrl}/reactivate/${id}`,
-        {},
-        this.httpOptions
-      )
-      .pipe(catchError(this.handleError));
-  }
-
   // Keep the old method for backward compatibility
   toggleApplicationStatus(id: number) {
     return this.http
@@ -222,28 +201,6 @@ export class ApplicationService {
     return this.http
       .delete(`${this.baseUrl}/remove/favoriteApp/${appId}`, this.httpOptions)
       .pipe(catchError(this.handleError));
-  }
-
-  /**
- * Register a new application
- */
-  registerApplication(applicationData: { appName: string; appDescription: string }): Observable<any> {
-    return this.http
-      .post(`${this.baseUrl}/register`, applicationData, this.httpOptions)
-      .pipe(
-        tap((response) => console.log('Register Application Response:', response)),
-        catchError(this.handleError)
-      );
-  }
-
-  //  Update an existing application
-  updateApplication(appId: number, applicationData: { appName: string; appDescription: string }): Observable<any> {
-    return this.http
-      .put(`${this.baseUrl}/update/${appId}`, applicationData, this.httpOptions)
-      .pipe(
-        tap((response) => console.log('Update Application Response:', response)),
-        catchError(this.handleError)
-      );
   }
 
   /** Get favorite applications with full info by app name*/
@@ -317,6 +274,112 @@ export class ApplicationService {
     );
   }
 
+  /**
+   * Applications Management
+   */
+  // Register a new application
+  registerApplication(applicationData: {
+    appName: string;
+    appDescription: string;
+  }): Observable<any> {
+    return this.http
+      .post(`${this.baseUrl}/register`, applicationData, this.httpOptions)
+      .pipe(
+        tap((response) =>
+          console.log('Register Application Response:', response)
+        ),
+        catchError(this.handleError)
+      );
+  }
+
+  //  Update an existing application
+  updateApplication(
+    appId: number,
+    applicationData: { appName: string; appDescription: string }
+  ): Observable<any> {
+    return this.http
+      .put(`${this.baseUrl}/update/${appId}`, applicationData, this.httpOptions)
+      .pipe(
+        tap((response) =>
+          console.log('Update Application Response:', response)
+        ),
+        catchError(this.handleError)
+      );
+  }
+
+  // Method for deactivate application
+  deactivateApplication(id: number): Observable<Application> {
+    return this.http
+      .patch<Application>(
+        `${this.baseUrl}/deactivate/${id}`,
+        {},
+        this.httpOptions
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  // Method for reactivate application
+  reactivateApplication(id: number): Observable<Application> {
+    return this.http
+      .patch<Application>(
+        `${this.baseUrl}/reactivate/${id}`,
+        {},
+        this.httpOptions
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Teams Management
+   */
+  // Register a new team
+  registerTeam(teamData: {
+    teamName: string;
+    teamDescription: string;
+  }): Observable<any> {
+    return this.http
+      .post(`${this.baseUrl}/register/teams`, teamData, this.httpOptions)
+      .pipe(
+        tap((response) => console.log('Register Team Response:', response)),
+        catchError(this.handleError)
+      );
+  }
+
+  //  Update an existing team
+  updateTeam(
+    teamId: number,
+    teamData: { teamName: string; teamDescription: string }
+  ): Observable<any> {
+    return this.http
+      .put(`${this.baseUrl}/update/team/${teamId}`, teamData, this.httpOptions)
+      .pipe(
+        tap((response) => console.log('Update Team Response:', response)),
+        catchError(this.handleError)
+      );
+  }
+
+  // Method for deactivate team
+  deactivateTeam(id: number): Observable<Team> {
+    return this.http
+      .patch<Team>(
+        `${this.baseUrl}/deactivate/team/${id}`,
+        {},
+        this.httpOptions
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  // Method for reactivate application
+  reactivateTeam(id: number): Observable<Team> {
+    return this.http
+      .patch<Team>(
+        `${this.baseUrl}/reactivate/team/${id}`,
+        {},
+        this.httpOptions
+      )
+      .pipe(catchError(this.handleError));
+  }
+
   /* -------------------------------------------------- */
   /* Error handler                                      */
   /* -------------------------------------------------- */
@@ -357,10 +420,10 @@ export class ApplicationService {
         default:
           message =
             typeof error.error === 'string' &&
-              error.error.includes('<!DOCTYPE html>')
+            error.error.includes('<!DOCTYPE html>')
               ? 'HTML response received – likely a routing/proxy issue.'
               : error.error?.message ||
-              `Server Error: ${error.status} - ${error.statusText}`;
+                `Server Error: ${error.status} - ${error.statusText}`;
       }
     }
     return throwError(() => ({ error: { message } }));

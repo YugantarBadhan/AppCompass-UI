@@ -1,0 +1,300 @@
+<div class="teams-container">
+    <div class="teams-header">
+        <h1 class="page-title">Teams Management</h1>
+        <p class="page-description">
+            Manage your teams with registration, updates, and status controls
+        </p>
+    </div>
+
+    <!-- Loading Teams -->
+    <div *ngIf="isLoadingTeams" class="loading-container">
+        <div class="loading-spinner-large"></div>
+        <span>Loading teams...</span>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation" *ngIf="!isLoadingTeams">
+        <button class="tab-btn" [class.active]="activeTab === 'register'" (click)="setActiveTab('register')">
+            <i class="icon">📝</i>
+            <span>Register</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'update'" (click)="setActiveTab('update')">
+            <i class="icon">✏️</i>
+            <span>Update</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'deactivate'" (click)="setActiveTab('deactivate')">
+            <i class="icon">⏸️</i>
+            <span>Deactivate</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'reactivate'" (click)="setActiveTab('reactivate')">
+            <i class="icon">▶️</i>
+            <span>Re-activate</span>
+        </button>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div class="message-container" *ngIf="!isLoadingTeams">
+        <div *ngIf="successMessage" class="alert alert-success">
+            <div class="alert-icon">✓</div>
+            <span>{{ successMessage }}</span>
+            <button class="alert-close" (click)="clearMessages()">×</button>
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-error">
+            <div class="alert-icon">✗</div>
+            <span>{{ errorMessage }}</span>
+            <button class="alert-close" (click)="clearMessages()">×</button>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" *ngIf="!isLoadingTeams">
+        <!-- Register Tab -->
+        <div *ngIf="activeTab === 'register'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Register New Team</h2>
+                    <p class="form-subtitle">Add a new team to the system</p>
+                </div>
+
+                <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()" class="team-form">
+                    <div class="form-group">
+                        <label for="teamName" class="form-label">
+                            Team Name <span class="required">*</span>
+                        </label>
+                        <input type="text" id="teamName" formControlName="teamName" class="form-input"
+                            [class.error]="isFieldInvalid(registerForm, 'teamName')"
+                            placeholder="Enter team name" />
+                        <div *ngIf="isFieldInvalid(registerForm, 'teamName')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(registerForm, "teamName") }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="teamDescription" class="form-label">
+                            Team Description <span class="required">*</span>
+                        </label>
+                        <textarea id="teamDescription" formControlName="teamDescription" class="form-textarea"
+                            [class.error]="isFieldInvalid(registerForm, 'teamDescription')"
+                            placeholder="Enter detailed description of your team" rows="4">
+                        </textarea>
+                        <div *ngIf="isFieldInvalid(registerForm, 'teamDescription')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(registerForm, "teamDescription") }}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" [disabled]="isLoading || registerForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">📝</i>
+                            {{ isLoading ? "Registering..." : "Register Team" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Update Tab -->
+        <div *ngIf="activeTab === 'update'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Update Team</h2>
+                    <p class="form-subtitle">Modify existing team details</p>
+                </div>
+
+                <form [formGroup]="updateForm" (ngSubmit)="onUpdateSubmit()" class="team-form">
+                    <!-- Team Dropdown -->
+                    <div class="form-group">
+                        <label for="updateTeamSelect" class="form-label">
+                            Teams <span class="required">*</span>
+                        </label>
+                        <select id="updateTeamSelect" formControlName="selectedTeamId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(updateForm, 'selectedTeamId')"
+                                (change)="onUpdateTeamSelect($event)">
+                            <option value="">Select a team...</option>
+                            <option *ngFor="let team of teams; trackBy: trackByTeamId" 
+                                    [value]="team.teamId">
+                                {{ team.teamName }} ({{ team.active ? 'Active' : 'Inactive' }})
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(updateForm, 'selectedTeamId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "selectedTeamId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected Team Info -->
+                    <div *ngIf="getSelectedUpdateTeam()" class="selected-team-info">
+                        <div class="selected-team-card">
+                            <div class="selected-team-header">
+                                <h4>Selected Team</h4>
+                                <span class="team-id-badge">ID: {{ getSelectedUpdateTeam()?.teamId }}</span>
+                            </div>
+                            <p class="selected-team-name">{{ getSelectedUpdateTeam()?.teamName }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Team Name -->
+                    <div class="form-group">
+                        <label for="updateTeamName" class="form-label">
+                            Team Name <span class="required">*</span>
+                        </label>
+                        <input type="text" id="updateTeamName" formControlName="teamName" class="form-input"
+                            [class.error]="isFieldInvalid(updateForm, 'teamName')"
+                            placeholder="Enter new team name" />
+                        <div *ngIf="isFieldInvalid(updateForm, 'teamName')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "teamName") }}
+                        </div>
+                    </div>
+
+                    <!-- Team Description -->
+                    <div class="form-group">
+                        <label for="updateTeamDescription" class="form-label">
+                            Team Description <span class="required">*</span>
+                        </label>
+                        <textarea id="updateTeamDescription" formControlName="teamDescription" class="form-textarea"
+                            [class.error]="isFieldInvalid(updateForm, 'teamDescription')"
+                            placeholder="Enter updated description" rows="4">
+                        </textarea>
+                        <div *ngIf="isFieldInvalid(updateForm, 'teamDescription')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "teamDescription") }}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" [disabled]="isLoading || updateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">✏️</i>
+                            {{ isLoading ? "Updating..." : "Update Team" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Deactivate Tab -->
+        <div *ngIf="activeTab === 'deactivate'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Deactivate Team</h2>
+                    <p class="form-subtitle">Temporarily disable an active team</p>
+                </div>
+
+                <form [formGroup]="deactivateForm" (ngSubmit)="onDeactivateSubmit()" class="team-form">
+                    <!-- Team Dropdown -->
+                    <div class="form-group">
+                        <label for="deactivateTeamSelect" class="form-label">
+                            Active Teams <span class="required">*</span>
+                        </label>
+                        <select id="deactivateTeamSelect" formControlName="selectedTeamId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(deactivateForm, 'selectedTeamId')"
+                                (change)="onDeactivateTeamSelect($event)">
+                            <option value="">Select an active team...</option>
+                            <option *ngFor="let team of activeTeams; trackBy: trackByTeamId" 
+                                    [value]="team.teamId">
+                                {{ team.teamName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(deactivateForm, 'selectedTeamId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(deactivateForm, "selectedTeamId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected Team Info -->
+                    <div *ngIf="getSelectedDeactivateTeam()" class="selected-team-info">
+                        <div class="selected-team-card">
+                            <div class="selected-team-header">
+                                <h4>Selected Team</h4>
+                                <span class="team-id-badge">ID: {{ getSelectedDeactivateTeam()?.teamId }}</span>
+                            </div>
+                            <p class="selected-team-name">{{ getSelectedDeactivateTeam()?.teamName }}</p>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-content">
+                            <strong>Warning:</strong> Deactivating an team will make it
+                            unavailable to users. This action can be reversed by reactivating
+                            the team.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-warning" [disabled]="isLoading || deactivateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">⏸️</i>
+                            {{ isLoading ? "Deactivating..." : "Deactivate Team" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Reactivate Tab -->
+        <div *ngIf="activeTab === 'reactivate'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Reactivate Team</h2>
+                    <p class="form-subtitle">Restore an inactive team to active status</p>
+                </div>
+
+                <form [formGroup]="reactivateForm" (ngSubmit)="onReactivateSubmit()" class="team-form">
+                    <!-- Team Dropdown -->
+                    <div class="form-group">
+                        <label for="reactivateTeamSelect" class="form-label">
+                            Inactive Teams <span class="required">*</span>
+                        </label>
+                        <select id="reactivateTeamSelect" formControlName="selectedTeamId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(reactivateForm, 'selectedTeamId')"
+                                (change)="onReactivateTeamSelect($event)">
+                            <option value="">Select an inactive team...</option>
+                            <option *ngFor="let team of inactiveTeams; trackBy: trackByTeamId" 
+                                    [value]="team.teamId">
+                                {{ team.teamName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(reactivateForm, 'selectedTeamId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(reactivateForm, "selectedTeamId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected Team Info -->
+                    <div *ngIf="getSelectedReactivateTeam()" class="selected-team-info">
+                        <div class="selected-team-card">
+                            <div class="selected-team-header">
+                                <h4>Selected Team</h4>
+                                <span class="team-id-badge">ID: {{ getSelectedReactivateTeam()?.teamId }}</span>
+                            </div>
+                            <p class="selected-team-name">{{ getSelectedReactivateTeam()?.teamName }}</p>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-icon">ℹ️</div>
+                        <div class="info-content">
+                            <strong>Info:</strong> Reactivating a team will make it
+                            available to users again.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success" [disabled]="isLoading || reactivateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">▶️</i>
+                            {{ isLoading ? "Reactivating..." : "Reactivate Team" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
