@@ -6,6 +6,7 @@ import { SelectionsComponent } from './components/selections/selections';
 import { ExploresComponent } from './components/explores/explores';
 import { ApplicationsManagementComponent } from './components/applications-management/applications-management';
 import { TeamsManagementComponent } from './components/teams-management/teams-management';
+import { SpocsManagementComponent } from './components/spocs-management/spocs-management';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -23,6 +24,7 @@ export const routes: Routes = [
       { path: 'explores', component: ExploresComponent },
       { path: 'applications-management', component: ApplicationsManagementComponent },
       { path: 'teams-management', component: TeamsManagementComponent },
+      { path: 'spocs-management', component: SpocsManagementComponent },
     ],
   },
 

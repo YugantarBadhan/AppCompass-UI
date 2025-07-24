@@ -380,6 +380,76 @@ export class ApplicationService {
       .pipe(catchError(this.handleError));
   }
 
+  /**
+   * SPOC Management
+   */
+  // Register a new SPOC
+  registerSpoc(spocData: {
+    spocName: string;
+    spocDesignation: string;
+    email: string;
+    teamId: number;
+  }): Observable<any> {
+    return this.http
+      .post(`${this.baseUrl}/register/spoc`, spocData, this.httpOptions)
+      .pipe(
+        tap((response) => console.log('Register SPOC Response:', response)),
+        catchError(this.handleError)
+      );
+  }
+
+  // Update an existing SPOC
+  updateSpoc(
+    spocId: number,
+    spocData: {
+      spocName: string;
+      spocDesignation: string;
+      email: string;
+      teamId: number;
+    }
+  ): Observable<any> {
+    return this.http
+      .put(`${this.baseUrl}/update/spoc/${spocId}`, spocData, this.httpOptions)
+      .pipe(
+        tap((response) => console.log('Update SPOC Response:', response)),
+        catchError(this.handleError)
+      );
+  }
+
+  // Method for deactivate SPOC
+  deactivateSpoc(id: number): Observable<AppSpoc> {
+    return this.http
+      .patch<AppSpoc>(
+        `${this.baseUrl}/deactivate/spoc/${id}`,
+        {},
+        this.httpOptions
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  // Method for reactivate SPOC
+  reactivateSpoc(id: number): Observable<AppSpoc> {
+    return this.http
+      .patch<AppSpoc>(
+        `${this.baseUrl}/reactivate/spoc/${id}`,
+        {},
+        this.httpOptions
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  // Method to assign SPOC to application
+  assignSpocToApplication(appId: number, spocId: number): Observable<any> {
+    return this.http
+      .post(`${this.baseUrl}/${appId}/spoc/${spocId}`, {}, this.httpOptions)
+      .pipe(
+        tap((response) =>
+          console.log('Assign SPOC to App Response:', response)
+        ),
+        catchError(this.handleError)
+      );
+  }
+
   /* -------------------------------------------------- */
   /* Error handler                                      */
   /* -------------------------------------------------- */

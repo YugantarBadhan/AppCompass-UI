@@ -1,0 +1,460 @@
+<div class="spocs-container">
+    <div class="spocs-header">
+        <h1 class="page-title">SPOC Management</h1>
+        <p class="page-description">
+            Manage your SPOCs with registration, updates, status controls, and application assignments
+        </p>
+    </div>
+
+    <!-- Loading SPOCs -->
+    <div *ngIf="isLoadingSpocs" class="loading-container">
+        <div class="loading-spinner-large"></div>
+        <span>Loading SPOCs...</span>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation" *ngIf="!isLoadingSpocs">
+        <button class="tab-btn" [class.active]="activeTab === 'register'" (click)="setActiveTab('register')">
+            <i class="icon">👤</i>
+            <span>Register</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'update'" (click)="setActiveTab('update')">
+            <i class="icon">✏️</i>
+            <span>Update</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'deactivate'" (click)="setActiveTab('deactivate')">
+            <i class="icon">⏸️</i>
+            <span>Deactivate</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'reactivate'" (click)="setActiveTab('reactivate')">
+            <i class="icon">▶️</i>
+            <span>Re-activate</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'assign'" (click)="setActiveTab('assign')">
+            <i class="icon">🔗</i>
+            <span>Assign</span>
+        </button>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div class="message-container" *ngIf="!isLoadingSpocs">
+        <div *ngIf="successMessage" class="alert alert-success">
+            <div class="alert-icon">✓</div>
+            <span>{{ successMessage }}</span>
+            <button class="alert-close" (click)="clearMessages()">×</button>
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-error">
+            <div class="alert-icon">✗</div>
+            <span>{{ errorMessage }}</span>
+            <button class="alert-close" (click)="clearMessages()">×</button>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" *ngIf="!isLoadingSpocs">
+        <!-- Register Tab -->
+        <div *ngIf="activeTab === 'register'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Register New SPOC</h2>
+                    <p class="form-subtitle">Add a new SPOC to the system</p>
+                </div>
+
+                <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()" class="spoc-form">
+                    <div class="form-group">
+                        <label for="spocName" class="form-label">
+                            SPOC Name <span class="required">*</span>
+                        </label>
+                        <input type="text" id="spocName" formControlName="spocName" class="form-input"
+                            [class.error]="isFieldInvalid(registerForm, 'spocName')"
+                            placeholder="Enter SPOC name" />
+                        <div *ngIf="isFieldInvalid(registerForm, 'spocName')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(registerForm, "spocName") }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="spocDesignation" class="form-label">
+                            SPOC Designation <span class="required">*</span>
+                        </label>
+                        <input type="text" id="spocDesignation" formControlName="spocDesignation" class="form-input"
+                            [class.error]="isFieldInvalid(registerForm, 'spocDesignation')"
+                            placeholder="Enter SPOC designation" />
+                        <div *ngIf="isFieldInvalid(registerForm, 'spocDesignation')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(registerForm, "spocDesignation") }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            Email <span class="required">*</span>
+                        </label>
+                        <input type="email" id="email" formControlName="email" class="form-input"
+                            [class.error]="isFieldInvalid(registerForm, 'email')"
+                            placeholder="Enter email address" />
+                        <div *ngIf="isFieldInvalid(registerForm, 'email')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(registerForm, "email") }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="teamId" class="form-label">
+                            Team <span class="required">*</span>
+                        </label>
+                        <select id="teamId" formControlName="teamId" class="form-select"
+                            [class.error]="isFieldInvalid(registerForm, 'teamId')">
+                            <option value="">Select a team...</option>
+                            <option *ngFor="let team of teams; trackBy: trackByTeamId" [value]="team.teamId">
+                                {{ team.teamName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isLoadingTeams" class="loading-text">Loading teams...</div>
+                        <div *ngIf="isFieldInvalid(registerForm, 'teamId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(registerForm, "teamId") }}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" [disabled]="isLoading || registerForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">👤</i>
+                            {{ isLoading ? "Registering..." : "Register SPOC" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Update Tab -->
+        <div *ngIf="activeTab === 'update'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Update SPOC</h2>
+                    <p class="form-subtitle">Modify existing SPOC details</p>
+                </div>
+
+                <form [formGroup]="updateForm" (ngSubmit)="onUpdateSubmit()" class="spoc-form">
+                    <!-- SPOC Dropdown -->
+                    <div class="form-group">
+                        <label for="updateSpocSelect" class="form-label">
+                            SPOCs <span class="required">*</span>
+                        </label>
+                        <select id="updateSpocSelect" formControlName="selectedSpocId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(updateForm, 'selectedSpocId')"
+                                (change)="onUpdateSpocSelect($event)">
+                            <option value="">Select a SPOC...</option>
+                            <option *ngFor="let spoc of spocs; trackBy: trackBySpocId" 
+                                    [value]="spoc.spocId">
+                                {{ spoc.spocName }} - {{ spoc.teamName }} ({{ spoc.active ? 'Active' : 'Inactive' }})
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(updateForm, 'selectedSpocId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "selectedSpocId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected SPOC Info -->
+                    <div *ngIf="getSelectedUpdateSpoc()" class="selected-spoc-info">
+                        <div class="selected-spoc-card">
+                            <div class="selected-spoc-header">
+                                <h4>Selected SPOC</h4>
+                                <span class="spoc-id-badge">ID: {{ getSelectedUpdateSpoc()?.spocId }}</span>
+                            </div>
+                            <p class="selected-spoc-name">{{ getSelectedUpdateSpoc()?.spocName }}</p>
+                            <p class="selected-spoc-team">Team: {{ getSelectedUpdateSpoc()?.teamName }}</p>
+                        </div>
+                    </div>
+
+                    <!-- SPOC Name -->
+                    <div class="form-group">
+                        <label for="updateSpocName" class="form-label">
+                            SPOC Name <span class="required">*</span>
+                        </label>
+                        <input type="text" id="updateSpocName" formControlName="spocName" class="form-input"
+                            [class.error]="isFieldInvalid(updateForm, 'spocName')"
+                            placeholder="Enter new SPOC name" />
+                        <div *ngIf="isFieldInvalid(updateForm, 'spocName')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "spocName") }}
+                        </div>
+                    </div>
+
+                    <!-- SPOC Designation -->
+                    <div class="form-group">
+                        <label for="updateSpocDesignation" class="form-label">
+                            SPOC Designation <span class="required">*</span>
+                        </label>
+                        <input type="text" id="updateSpocDesignation" formControlName="spocDesignation" class="form-input"
+                            [class.error]="isFieldInvalid(updateForm, 'spocDesignation')"
+                            placeholder="Enter new SPOC designation" />
+                        <div *ngIf="isFieldInvalid(updateForm, 'spocDesignation')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "spocDesignation") }}
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="updateEmail" class="form-label">
+                            Email <span class="required">*</span>
+                        </label>
+                        <input type="email" id="updateEmail" formControlName="email" class="form-input"
+                            [class.error]="isFieldInvalid(updateForm, 'email')"
+                            placeholder="Enter new email address" />
+                        <div *ngIf="isFieldInvalid(updateForm, 'email')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "email") }}
+                        </div>
+                    </div>
+
+                    <!-- Team -->
+                    <div class="form-group">
+                        <label for="updateTeamId" class="form-label">
+                            Team <span class="required">*</span>
+                        </label>
+                        <select id="updateTeamId" formControlName="teamId" class="form-select"
+                            [class.error]="isFieldInvalid(updateForm, 'teamId')">
+                            <option value="">Select a team...</option>
+                            <option *ngFor="let team of teams; trackBy: trackByTeamId" [value]="team.teamId">
+                                {{ team.teamName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(updateForm, 'teamId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(updateForm, "teamId") }}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" [disabled]="isLoading || updateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">✏️</i>
+                            {{ isLoading ? "Updating..." : "Update SPOC" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Deactivate Tab -->
+        <div *ngIf="activeTab === 'deactivate'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Deactivate SPOC</h2>
+                    <p class="form-subtitle">Temporarily disable an active SPOC</p>
+                </div>
+
+                <form [formGroup]="deactivateForm" (ngSubmit)="onDeactivateSubmit()" class="spoc-form">
+                    <!-- SPOC Dropdown -->
+                    <div class="form-group">
+                        <label for="deactivateSpocSelect" class="form-label">
+                            Active SPOCs <span class="required">*</span>
+                        </label>
+                        <select id="deactivateSpocSelect" formControlName="selectedSpocId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(deactivateForm, 'selectedSpocId')"
+                                (change)="onDeactivateSpocSelect($event)">
+                            <option value="">Select an active SPOC...</option>
+                            <option *ngFor="let spoc of activeSpocs; trackBy: trackBySpocId" 
+                                    [value]="spoc.spocId">
+                                {{ spoc.spocName }} - {{ spoc.teamName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(deactivateForm, 'selectedSpocId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(deactivateForm, "selectedSpocId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected SPOC Info -->
+                    <div *ngIf="getSelectedDeactivateSpoc()" class="selected-spoc-info">
+                        <div class="selected-spoc-card">
+                            <div class="selected-spoc-header">
+                                <h4>Selected SPOC</h4>
+                                <span class="spoc-id-badge">ID: {{ getSelectedDeactivateSpoc()?.spocId }}</span>
+                            </div>
+                            <p class="selected-spoc-name">{{ getSelectedDeactivateSpoc()?.spocName }}</p>
+                            <p class="selected-spoc-team">Team: {{ getSelectedDeactivateSpoc()?.teamName }}</p>
+                            <p class="selected-spoc-email">Email: {{ getSelectedDeactivateSpoc()?.email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-content">
+                            <strong>Warning:</strong> Deactivating a SPOC will make them
+                            unavailable for new application assignments. This action can be reversed by reactivating
+                            the SPOC.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-warning" [disabled]="isLoading || deactivateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">⏸️</i>
+                            {{ isLoading ? "Deactivating..." : "Deactivate SPOC" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Reactivate Tab -->
+        <div *ngIf="activeTab === 'reactivate'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Reactivate SPOC</h2>
+                    <p class="form-subtitle">Restore an inactive SPOC to active status</p>
+                </div>
+
+                <form [formGroup]="reactivateForm" (ngSubmit)="onReactivateSubmit()" class="spoc-form">
+                    <!-- SPOC Dropdown -->
+                    <div class="form-group">
+                        <label for="reactivateSpocSelect" class="form-label">
+                            Inactive SPOCs <span class="required">*</span>
+                        </label>
+                        <select id="reactivateSpocSelect" formControlName="selectedSpocId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(reactivateForm, 'selectedSpocId')"
+                                (change)="onReactivateSpocSelect($event)">
+                            <option value="">Select an inactive SPOC...</option>
+                            <option *ngFor="let spoc of inactiveSpocs; trackBy: trackBySpocId" 
+                                    [value]="spoc.spocId">
+                                {{ spoc.spocName }} - {{ spoc.teamName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(reactivateForm, 'selectedSpocId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(reactivateForm, "selectedSpocId") }}
+                        </div>
+                    </div>
+
+                    <!-- Selected SPOC Info -->
+                    <div *ngIf="getSelectedReactivateSpoc()" class="selected-spoc-info">
+                        <div class="selected-spoc-card">
+                            <div class="selected-spoc-header">
+                                <h4>Selected SPOC</h4>
+                                <span class="spoc-id-badge">ID: {{ getSelectedReactivateSpoc()?.spocId }}</span>
+                            </div>
+                            <p class="selected-spoc-name">{{ getSelectedReactivateSpoc()?.spocName }}</p>
+                            <p class="selected-spoc-team">Team: {{ getSelectedReactivateSpoc()?.teamName }}</p>
+                            <p class="selected-spoc-email">Email: {{ getSelectedReactivateSpoc()?.email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-icon">ℹ️</div>
+                        <div class="info-content">
+                            <strong>Info:</strong> Reactivating a SPOC will make them
+                            available for application assignments again.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success" [disabled]="isLoading || reactivateForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">▶️</i>
+                            {{ isLoading ? "Reactivating..." : "Reactivate SPOC" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assign Tab -->
+        <div *ngIf="activeTab === 'assign'" class="tab-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Assign SPOC to Application</h2>
+                    <p class="form-subtitle">Link a SPOC with an application</p>
+                </div>
+
+                <form [formGroup]="assignForm" (ngSubmit)="onAssignSubmit()" class="spoc-form">
+                    <!-- Application Dropdown -->
+                    <div class="form-group">
+                        <label for="assignAppSelect" class="form-label">
+                            Application <span class="required">*</span>
+                        </label>
+                        <select id="assignAppSelect" formControlName="selectedAppId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(assignForm, 'selectedAppId')"
+                                (change)="onAssignAppSelect($event)">
+                            <option value="">Select an application...</option>
+                            <option *ngFor="let app of applications; trackBy: trackByAppId" 
+                                    [value]="app.appId">
+                                {{ app.appName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isLoadingApplications" class="loading-text">Loading applications...</div>
+                        <div *ngIf="isFieldInvalid(assignForm, 'selectedAppId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(assignForm, "selectedAppId") }}
+                        </div>
+                    </div>
+
+                    <!-- SPOC Dropdown -->
+                    <div class="form-group">
+                        <label for="assignSpocSelect" class="form-label">
+                            SPOC <span class="required">*</span>
+                        </label>
+                        <select id="assignSpocSelect" formControlName="selectedSpocId" 
+                                class="form-select" 
+                                [class.error]="isFieldInvalid(assignForm, 'selectedSpocId')"
+                                (change)="onAssignSpocSelect($event)">
+                            <option value="">Select a SPOC...</option>
+                            <option *ngFor="let spoc of activeSpocs; trackBy: trackBySpocId" 
+                                    [value]="spoc.spocId">
+                                {{ spoc.spocName }} - {{ spoc.teamName }}
+                            </option>
+                        </select>
+                        <div *ngIf="isFieldInvalid(assignForm, 'selectedSpocId')" class="error-message">
+                            <i class="error-icon">⚠️</i>
+                            {{ getFieldError(assignForm, "selectedSpocId") }}
+                        </div>
+                    </div>
+
+                    <!-- Assignment Summary -->
+                    <div *ngIf="getSelectedApplication() && getSelectedAssignSpoc()" class="assignment-summary">
+                        <div class="summary-card">
+                            <h4>Assignment Summary</h4>
+                            <div class="summary-item">
+                                <strong>Application:</strong> {{ getSelectedApplication()?.appName }}
+                            </div>
+                            <div class="summary-item">
+                                <strong>SPOC:</strong> {{ getSelectedAssignSpoc()?.spocName }}
+                            </div>
+                            <div class="summary-item">
+                                <strong>Team:</strong> {{ getSelectedAssignSpoc()?.teamName }}
+                            </div>
+                            <div class="summary-item">
+                                <strong>Email:</strong> {{ getSelectedAssignSpoc()?.email }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-icon">ℹ️</div>
+                        <div class="info-content">
+                            <strong>Info:</strong> This will assign the selected SPOC as the point of contact
+                            for the selected application.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" [disabled]="isLoading || assignForm.invalid">
+                            <span *ngIf="isLoading" class="loading-spinner"></span>
+                            <i *ngIf="!isLoading" class="btn-icon">🔗</i>
+                            {{ isLoading ? "Assigning..." : "Assign SPOC" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
