@@ -25,12 +25,28 @@
       <!-- User Menu Section -->
       <div class="user-menu" (click)="toggleUserMenu($event)">
         <div class="user-avatar">
-          <img src="assets/images/profile.png" alt="User Avatar" class="avatar-img" />
+          <img
+            src="assets/images/profile.png"
+            alt="User Avatar"
+            class="avatar-img"
+          />
         </div>
         <!-- User Dropdown Menu -->
         <div class="user-dropdown" [class.show]="isUserMenuOpen">
+          <div class="dropdown-item" (click)="navigateToUserManagement()">
+            <img
+              src="assets/images/user-management.png"
+              alt="User Management Icon"
+              class="menu-icon"
+            />
+            <span class="dropdown-text">User Management</span>
+          </div>
           <div class="dropdown-item" (click)="logout()">
-            <img src="assets/images/logout.png" alt="Logout Icon" class="logout-icon" />
+            <img
+              src="assets/images/logout.png"
+              alt="Logout Icon"
+              class="logout-icon"
+            />
             <span class="dropdown-text">Logout</span>
           </div>
         </div>
@@ -45,31 +61,47 @@
         <ul class="nav-list">
           <li class="nav-item" routerLinkActive="active">
             <a routerLink="app-library" class="nav-link">
-              <img src="assets/images/applications.png" alt="App Library" class="nav-icon" />
+              <img
+                src="assets/images/applications.png"
+                alt="App Library"
+                class="nav-icon"
+              />
               <span class="nav-text">App Library</span>
             </a>
           </li>
           <li class="nav-item" routerLinkActive="active">
             <a routerLink="selections" class="nav-link">
-              <img src="assets/images/love.png" alt="Selections" class="nav-icon" />
+              <img
+                src="assets/images/love.png"
+                alt="Selections"
+                class="nav-icon"
+              />
               <span class="nav-text">Selections</span>
             </a>
           </li>
           <li class="nav-item" routerLinkActive="active">
             <a routerLink="explores" class="nav-link">
-              <img src="assets/images/filter.png" alt="Filters" class="nav-icon" />
+              <img
+                src="assets/images/filter.png"
+                alt="Filters"
+                class="nav-icon"
+              />
               <span class="nav-text">Explores</span>
             </a>
           </li>
         </ul>
 
         <!-- Spacer added here -->
-        <div style="margin-top: 40px;"></div>
+        <div style="margin-top: 40px"></div>
 
         <ul class="nav-list">
           <li class="nav-item" routerLinkActive="active">
             <a routerLink="applications-management" class="nav-link">
-              <img src="assets/images/app.png" alt="Applications" class="nav-icon" />
+              <img
+                src="assets/images/app.png"
+                alt="Applications"
+                class="nav-icon"
+              />
               <span class="nav-text">Applications Management</span>
             </a>
           </li>
@@ -81,7 +113,11 @@
           </li>
           <li class="nav-item" routerLinkActive="active">
             <a routerLink="spocs-management" class="nav-link">
-              <img src="assets/images/folder.png" alt="Spocs" class="nav-icon" />
+              <img
+                src="assets/images/folder.png"
+                alt="Spocs"
+                class="nav-icon"
+              />
               <span class="nav-text">SPOC Management</span>
             </a>
           </li>
@@ -91,7 +127,11 @@
       <div class="developer-info">
         <a href="#" class="developer-link">
           <!-- <span class="developer-icon">👨‍💻</span> -->
-           <img src="assets/images/developer.png" alt="Developer" class="developer-icon" />
+          <img
+            src="assets/images/developer.png"
+            alt="Developer"
+            class="developer-icon"
+          />
           <span class="developer-text">Developed by Yugantar Badhan</span>
         </a>
       </div>

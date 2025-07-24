@@ -7,6 +7,7 @@ import { ExploresComponent } from './components/explores/explores';
 import { ApplicationsManagementComponent } from './components/applications-management/applications-management';
 import { TeamsManagementComponent } from './components/teams-management/teams-management';
 import { SpocsManagementComponent } from './components/spocs-management/spocs-management';
+import { UserManagementComponent } from './components/user-management/user-management';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -15,16 +16,22 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () =>
-      import('./components/dashboard/dashboard').then((m) => m.DashboardComponent),
+      import('./components/dashboard/dashboard').then(
+        (m) => m.DashboardComponent
+      ),
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'app-library', pathMatch: 'full' },
       { path: 'app-library', component: AppLibraryComponent },
       { path: 'selections', component: SelectionsComponent },
       { path: 'explores', component: ExploresComponent },
-      { path: 'applications-management', component: ApplicationsManagementComponent },
+      {
+        path: 'applications-management',
+        component: ApplicationsManagementComponent,
+      },
       { path: 'teams-management', component: TeamsManagementComponent },
       { path: 'spocs-management', component: SpocsManagementComponent },
+      { path: 'user-management', component: UserManagementComponent },
     ],
   },
 

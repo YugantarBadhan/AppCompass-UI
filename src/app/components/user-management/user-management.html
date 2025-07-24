@@ -1,0 +1,47 @@
+<div class="user-management-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">User Management</h1>
+    <p class="page-description">Manage roles and users in your application</p>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button
+      class="tab-button"
+      [class.active]="activeTab === 'roles'"
+      (click)="setActiveTab('roles')"
+    >
+      <i class="tab-icon role-icon"></i>
+      Role Management
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab === 'users'"
+      (click)="setActiveTab('users')"
+    >
+      <i class="tab-icon user-icon"></i>
+      User Management
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Role Management Tab -->
+    <div class="tab-pane" [class.active]="activeTab === 'roles'">
+      <app-role-management></app-role-management>
+    </div>
+
+    <!-- User Management Tab -->
+    <div class="tab-pane" [class.active]="activeTab === 'users'">
+      <div class="coming-soon">
+        <div class="coming-soon-icon">👥</div>
+        <h3>User Management Coming Soon</h3>
+        <p>
+          This feature is currently under development and will be available in
+          the next update.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

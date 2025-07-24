@@ -1,7 +1,6 @@
-import { Component, OnDestroy, HostListener } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router'; // ✅ Needed for router-outlet and routerLink
-import { Subject, takeUntil } from 'rxjs';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -9,48 +8,43 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule, // ✅ Required for <router-outlet> and routerLink in HTML
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive
   ],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.css'],
+  styleUrls: ['./dashboard.css']
 })
-export class DashboardComponent implements OnDestroy {
+export class DashboardComponent {
   isUserMenuOpen = false;
-  private destroy$ = new Subject<void>();
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  toggleUserMenu(event: Event): void {
+  toggleUserMenu(event: Event) {
     event.stopPropagation();
     this.isUserMenuOpen = !this.isUserMenuOpen;
-  }
-
-  logout(): void {
-    this.isUserMenuOpen = false;
-
-    this.authService
-      .logoutFromServer()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.router.navigate(['/login']);
-        },
-        error: (error) => {
-          console.error('Logout error:', error);
-          this.router.navigate(['/login']);
-        },
-      });
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
+    
+    // Close menu when clicking outside
     if (this.isUserMenuOpen) {
-      this.isUserMenuOpen = false;
+      document.addEventListener('click', this.closeUserMenu.bind(this), { once: true });
     }
+  }
+
+  closeUserMenu() {
+    this.isUserMenuOpen = false;
+  }
+
+  navigateToUserManagement() {
+    this.router.navigate(['/dashboard/user-management']);
+    this.closeUserMenu();
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+    this.closeUserMenu();
   }
 }
