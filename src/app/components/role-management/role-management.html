@@ -107,6 +107,15 @@
       <button class="close-btn" (click)="closeCreateModal()">&times;</button>
     </div>
 
+    <!-- Modal-specific error message -->
+    <div class="modal-alert modal-alert-error" *ngIf="createModalErrorMessage">
+      <div class="modal-alert-content">
+        <i class="modal-alert-icon">⚠️</i>
+        <span>{{ createModalErrorMessage }}</span>
+        <button class="modal-alert-close" (click)="createModalErrorMessage = ''">&times;</button>
+      </div>
+    </div>
+
     <form [formGroup]="createRoleForm" (ngSubmit)="onCreateRole()">
       <div class="modal-body">
         <div class="form-group">
@@ -166,6 +175,15 @@
     <div class="modal-header">
       <h3>Edit Role</h3>
       <button class="close-btn" (click)="closeEditModal()">&times;</button>
+    </div>
+
+    <!-- Modal-specific error message -->
+    <div class="modal-alert modal-alert-error" *ngIf="editModalErrorMessage">
+      <div class="modal-alert-content">
+        <i class="modal-alert-icon">⚠️</i>
+        <span>{{ editModalErrorMessage }}</span>
+        <button class="modal-alert-close" (click)="editModalErrorMessage = ''">&times;</button>
+      </div>
     </div>
 
     <form [formGroup]="editRoleForm" (ngSubmit)="onUpdateRole()">

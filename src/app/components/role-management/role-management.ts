@@ -40,6 +40,10 @@ export class RoleManagementComponent implements OnInit {
   editRoleForm!: FormGroup;
   selectedRole: Role | null = null;
 
+  // Modal-specific error messages
+  createModalErrorMessage = '';
+  editModalErrorMessage = '';
+
   constructor(
     private roleService: RoleService,
     private authService: AuthService,
@@ -108,11 +112,13 @@ export class RoleManagementComponent implements OnInit {
     this.showCreateModal = true;
     this.createRoleForm.reset();
     this.clearMessages();
+    this.clearModalMessages();
   }
 
   closeCreateModal() {
     this.showCreateModal = false;
     this.createRoleForm.reset();
+    this.clearModalMessages();
   }
 
   openEditModal(role: Role) {
@@ -134,18 +140,20 @@ export class RoleManagementComponent implements OnInit {
       name: role.name,
     });
     this.clearMessages();
+    this.clearModalMessages();
   }
 
   closeEditModal() {
     this.showEditModal = false;
     this.selectedRole = null;
     this.editRoleForm.reset();
+    this.clearModalMessages();
   }
 
   onCreateRole() {
     if (this.createRoleForm.valid && this.authService.isAuthenticated()) {
       this.isLoading = true;
-      this.clearMessages();
+      this.clearModalMessages();
 
       const request: CreateRoleRequest = {
         name: this.createRoleForm.get('name')?.value.trim(),
@@ -159,12 +167,13 @@ export class RoleManagementComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          this.handleApiError(error, 'Failed to create role');
+          // Show error in modal instead of main page
+          this.handleModalError(error, 'Failed to create role', true);
         },
       });
     } else {
       if (!this.authService.isAuthenticated()) {
-        this.errorMessage = 'Authentication required. Please log in again.';
+        this.createModalErrorMessage = 'Authentication required. Please log in again.';
       } else {
         this.markFormFieldsAsTouched(this.createRoleForm);
       }
@@ -179,14 +188,12 @@ export class RoleManagementComponent implements OnInit {
     ) {
       // Double check if role is still active before updating
       if (!this.selectedRole.isActive) {
-        this.errorMessage =
-          'Cannot update inactive roles. Please reactivate the role first.';
-        this.closeEditModal();
+        this.editModalErrorMessage = 'Cannot update inactive roles. Please reactivate the role first.';
         return;
       }
 
       this.isLoading = true;
-      this.clearMessages();
+      this.clearModalMessages();
 
       const request: UpdateRoleRequest = {
         name: this.editRoleForm.get('name')?.value.trim(),
@@ -200,12 +207,13 @@ export class RoleManagementComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          this.handleApiError(error, 'Failed to update role');
+          // Show error in modal instead of main page
+          this.handleModalError(error, 'Failed to update role', false);
         },
       });
     } else {
       if (!this.authService.isAuthenticated()) {
-        this.errorMessage = 'Authentication required. Please log in again.';
+        this.editModalErrorMessage = 'Authentication required. Please log in again.';
       } else {
         this.markFormFieldsAsTouched(this.editRoleForm);
       }
@@ -242,7 +250,42 @@ export class RoleManagementComponent implements OnInit {
     });
   }
 
-  // Enhanced error handling method
+  // Modal-specific error handler
+  private handleModalError(error: any, defaultMessage: string, isCreateModal: boolean = false) {
+    let userFriendlyMessage = '';
+
+    if (error.status === 401) {
+      userFriendlyMessage = 'Your session has expired. Please log in again.';
+    } else if (error.status === 403) {
+      userFriendlyMessage = 'You do not have permission to perform this action.';
+    } else if (error.status === 404) {
+      userFriendlyMessage = 'The requested role was not found. It may have been deleted by another user.';
+    } else if (error.status === 409) {
+      userFriendlyMessage = 'A role with this name already exists. Please choose a different name.';
+    } else if (error.status === 422) {
+      userFriendlyMessage = 'Invalid data provided. Please check your input and try again.';
+    } else if (error.status === 400) {
+      userFriendlyMessage = error.error?.message || 'Bad request. Please check your input and try again.';
+    } else if (error.status === 500) {
+      userFriendlyMessage = 'Internal server error. Please try again later or contact support.';
+    } else if (error.status === 0) {
+      userFriendlyMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+    } else if (error.status >= 500) {
+      userFriendlyMessage = 'Server is currently unavailable. Please try again later.';
+    } else if (error.error?.message) {
+      userFriendlyMessage = error.error.message;
+    } else {
+      userFriendlyMessage = `${defaultMessage}. Please try again or contact support if the problem persists.`;
+    }
+
+    if (isCreateModal) {
+      this.createModalErrorMessage = userFriendlyMessage;
+    } else {
+      this.editModalErrorMessage = userFriendlyMessage;
+    }
+  }
+
+  // Enhanced error handling method for main page errors
   private handleApiError(error: any, defaultMessage: string) {
     let userFriendlyMessage = '';
 
@@ -262,6 +305,7 @@ export class RoleManagementComponent implements OnInit {
         'Invalid data provided. Please check your input and try again.';
     } else if (error.status === 400) {
       userFriendlyMessage =
+        error.error?.message ||
         'Bad request. Please check your input and try again.';
     } else if (error.status === 500) {
       userFriendlyMessage =
@@ -320,6 +364,11 @@ export class RoleManagementComponent implements OnInit {
   private clearMessages() {
     this.errorMessage = '';
     this.successMessage = '';
+  }
+
+  private clearModalMessages() {
+    this.createModalErrorMessage = '';
+    this.editModalErrorMessage = '';
   }
 
   get isCreateFormValid(): boolean {

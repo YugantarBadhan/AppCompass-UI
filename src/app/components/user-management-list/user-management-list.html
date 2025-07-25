@@ -1,0 +1,533 @@
+<div class="user-management-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">User Management</h2>
+    <button
+      class="btn btn-primary create-btn"
+      (click)="openCreateModal()"
+      [disabled]="isLoading"
+    >
+      <i class="icon-plus"></i>
+      Create New User
+    </button>
+  </div>
+
+  <!-- Alert Messages -->
+  <app-alert
+    *ngIf="errorMessage"
+    [message]="errorMessage"
+    type="error"
+    (dismissed)="errorMessage = ''"
+  >
+  </app-alert>
+
+  <app-alert
+    *ngIf="successMessage"
+    [message]="successMessage"
+    type="success"
+    (dismissed)="successMessage = ''"
+  >
+  </app-alert>
+
+  <!-- Loading Spinner -->
+  <app-loading *ngIf="isLoading && users.length === 0"></app-loading>
+
+  <!-- Users Table -->
+  <div class="table-container" *ngIf="!isLoading || users.length > 0">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let user of paginatedUsers; trackBy: trackByUserId"
+          class="table-row"
+        >
+          <td class="username" [attr.data-label]="'Username'">
+            {{ user.username }}
+          </td>
+          <td [attr.data-label]="'Role'">
+            <span
+              class="role-badge"
+              [class]="'role-' + user.role.toLowerCase()"
+            >
+              {{ getRoleDisplayName(user.role) }}
+            </span>
+          </td>
+          <td [attr.data-label]="'Status'">
+            <span
+              class="status-badge"
+              [class.active]="user.isActive"
+              [class.inactive]="!user.isActive"
+            >
+              {{ user.isActive ? "Active" : "Inactive" }}
+            </span>
+          </td>
+          <td class="actions-cell" [attr.data-label]="'Actions'">
+            <button
+              class="btn btn-secondary btn-sm action-btn"
+              (click)="openEditModal(user)"
+              [disabled]="isLoading || !canEditUser(user)"
+              [title]="
+                canEditUser(user) ? 'Edit User' : 'Cannot edit inactive user'
+              "
+              [class.disabled-tooltip]="!canEditUser(user)"
+            >
+              <i class="icon-edit"></i>
+              Edit
+            </button>
+            <button
+              class="btn btn-sm action-btn"
+              [ngClass]="getToggleButtonConfig(user).class"
+              (click)="onToggleUserStatus(user)"
+              [disabled]="isLoading"
+              [title]="user.isActive ? 'Deactivate User' : 'Reactivate User'"
+            >
+              <i [ngClass]="getToggleButtonConfig(user).icon"></i>
+              {{ getToggleButtonConfig(user).text }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="users.length === 0 && !isLoading">
+      <div class="empty-icon">👥</div>
+      <h3>No Users Found</h3>
+      <p>Get started by creating your first user.</p>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        Create New User
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div
+    *ngIf="!isLoading && users.length > 0 && totalPages > 1"
+    class="pagination"
+  >
+    <!-- First Page Button -->
+    <button
+      class="pagination-nav-button first-last"
+      (click)="changePage(1)"
+      [disabled]="currentPage === 1"
+      title="First Page"
+    >
+      ⇤
+    </button>
+
+    <!-- Previous Page Button -->
+    <button
+      class="pagination-nav-button"
+      (click)="changePage(currentPage - 1)"
+      [disabled]="currentPage === 1"
+      title="Previous Page"
+    >
+      ‹
+    </button>
+
+    <!-- Page Numbers -->
+    <ng-container *ngFor="let page of getVisiblePages()">
+      <button
+        *ngIf="page !== '...'"
+        class="pagination-page-button"
+        [class.active]="page === currentPage"
+        (click)="changePage(+page)"
+      >
+        {{ page }}
+      </button>
+      <span *ngIf="page === '...'" class="pagination-ellipsis">...</span>
+    </ng-container>
+
+    <!-- Next Page Button -->
+    <button
+      class="pagination-nav-button"
+      (click)="changePage(currentPage + 1)"
+      [disabled]="currentPage === totalPages"
+      title="Next Page"
+    >
+      ›
+    </button>
+
+    <!-- Last Page Button -->
+    <button
+      class="pagination-nav-button first-last"
+      (click)="changePage(totalPages)"
+      [disabled]="currentPage === totalPages"
+      title="Last Page"
+    >
+      ⇥
+    </button>
+
+    <!-- Jump to Page -->
+    <div class="page-jump-container">
+      <span class="page-jump-text">Go to:</span>
+      <input
+        type="number"
+        [(ngModel)]="jumpToPage"
+        [min]="1"
+        [max]="totalPages"
+        class="page-jump-input"
+        (keyup.enter)="jumpToPageAction()"
+      />
+      <button class="page-jump-button" (click)="jumpToPageAction()">Go</button>
+    </div>
+  </div>
+
+  <!-- Results Summary -->
+  <div *ngIf="!isLoading && users.length > 0" class="results-summary">
+    <p class="summary-text">
+      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to
+      {{ Math.min(currentPage * itemsPerPage, users.length) }} of
+      {{ users.length }} users
+    </p>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create New User</h3>
+      <button class="close-btn" (click)="closeCreateModal()">&times;</button>
+    </div>
+
+    <!-- Modal-specific error message -->
+    <div class="modal-alert modal-alert-error" *ngIf="createModalErrorMessage">
+      <div class="modal-alert-content">
+        <i class="modal-alert-icon">⚠️</i>
+        <span>{{ createModalErrorMessage }}</span>
+        <button class="modal-alert-close" (click)="createModalErrorMessage = ''">&times;</button>
+      </div>
+    </div>
+
+    <form
+      [formGroup]="createUserForm"
+      (ngSubmit)="onCreateUser()"
+      autocomplete="off"
+    >
+      <!-- Hidden dummy fields to prevent autofill -->
+      <input
+        type="text"
+        name="fakeusernameremembered"
+        style="position: absolute; top: -9999px; left: -9999px"
+        tabindex="-1"
+      />
+      <input
+        type="password"
+        name="fakepasswordremembered"
+        style="position: absolute; top: -9999px; left: -9999px"
+        tabindex="-1"
+      />
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="createUsername">Username *</label>
+          <input
+            type="text"
+            id="createUsername"
+            name="newUserName"
+            formControlName="username"
+            class="form-control"
+            autocomplete="new-password"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            data-form-type="other"
+            readonly
+            onfocus="this.removeAttribute('readonly');"
+            [class.error]="
+              createUserForm.get('username')?.invalid &&
+              createUserForm.get('username')?.touched
+            "
+            placeholder="Enter username (letters and numbers only)"
+          />
+
+          <div
+            class="error-message"
+            *ngIf="
+              createUserForm.get('username')?.invalid &&
+              createUserForm.get('username')?.touched
+            "
+          >
+            <span *ngIf="createUserForm.get('username')?.errors?.['required']">
+              Username is required
+            </span>
+            <span *ngIf="createUserForm.get('username')?.errors?.['minlength']">
+              Username must be at least 2 characters long
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="createPassword">Password *</label>
+          <input
+            type="password"
+            id="createPassword"
+            name="newUserPassword"
+            formControlName="password"
+            class="form-control"
+            autocomplete="new-password"
+            data-form-type="other"
+            readonly
+            onfocus="this.removeAttribute('readonly');"
+            [class.error]="
+              createUserForm.get('password')?.invalid &&
+              createUserForm.get('password')?.touched
+            "
+            placeholder="Enter password"
+          />
+
+          <div
+            class="error-message"
+            *ngIf="
+              createUserForm.get('password')?.invalid &&
+              createUserForm.get('password')?.touched
+            "
+          >
+            <span *ngIf="createUserForm.get('password')?.errors?.['required']">
+              Password is required
+            </span>
+            <span *ngIf="createUserForm.get('password')?.errors?.['minlength']">
+              Password must be at least 8 characters long
+            </span>
+            <span
+              *ngIf="createUserForm.get('password')?.errors?.['invalidPassword']"
+            >
+              Password must contain at least one uppercase letter, one number,
+              and one special character
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="createRole">Role *</label>
+          <select
+            id="createRole"
+            formControlName="role"
+            class="form-control"
+            [class.error]="
+              createUserForm.get('role')?.invalid &&
+              createUserForm.get('role')?.touched
+            "
+          >
+            <option
+              value=""
+              disabled
+              selected
+              style="color: #9ca3af; font-style: italic"
+            >
+              Select a role
+            </option>
+            <option
+              *ngFor="let role of roles"
+              [value]="role.name"
+              style="color: #374151; font-style: normal"
+            >
+              {{ role.name }}
+            </option>
+          </select>
+
+          <div
+            class="error-message"
+            *ngIf="
+              createUserForm.get('role')?.invalid &&
+              createUserForm.get('role')?.touched
+            "
+          >
+            <span *ngIf="createUserForm.get('role')?.errors?.['required']">
+              Role is required
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeCreateModal()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!isCreateFormValid"
+        >
+          {{ isLoading ? "Creating..." : "Create User" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Edit User</h3>
+      <button class="close-btn" (click)="closeEditModal()">&times;</button>
+    </div>
+
+    <!-- Modal-specific error message -->
+    <div class="modal-alert modal-alert-error" *ngIf="editModalErrorMessage">
+      <div class="modal-alert-content">
+        <i class="modal-alert-icon">⚠️</i>
+        <span>{{ editModalErrorMessage }}</span>
+        <button class="modal-alert-close" (click)="editModalErrorMessage = ''">&times;</button>
+      </div>
+    </div>
+
+    <form
+      [formGroup]="editUserForm"
+      (ngSubmit)="onUpdateUser()"
+      autocomplete="off"
+    >
+      <!-- Hidden dummy fields to prevent autofill -->
+      <input
+        type="text"
+        name="fakeeditusernameremembered"
+        style="position: absolute; top: -9999px; left: -9999px"
+        tabindex="-1"
+      />
+      <input
+        type="password"
+        name="fakeeditpasswordremembered"
+        style="position: absolute; top: -9999px; left: -9999px"
+        tabindex="-1"
+      />
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editUsername">Username *</label>
+          <input
+            type="text"
+            id="editUsername"
+            name="editUserName"
+            formControlName="username"
+            class="form-control"
+            autocomplete="new-password"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            data-form-type="other"
+            readonly
+            onfocus="this.removeAttribute('readonly');"
+            [class.error]="
+              editUserForm.get('username')?.invalid &&
+              editUserForm.get('username')?.touched
+            "
+            placeholder="Enter username (letters and numbers only)"
+          />
+
+          <div
+            class="error-message"
+            *ngIf="
+              editUserForm.get('username')?.invalid &&
+              editUserForm.get('username')?.touched
+            "
+          >
+            <span *ngIf="editUserForm.get('username')?.errors?.['required']">
+              Username is required
+            </span>
+            <span *ngIf="editUserForm.get('username')?.errors?.['minlength']">
+              Username must be at least 2 characters long
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editPassword">Password</label>
+          <input
+            type="password"
+            id="editPassword"
+            name="editUserPassword"
+            formControlName="password"
+            class="form-control"
+            autocomplete="new-password"
+            data-form-type="other"
+            readonly
+            onfocus="this.removeAttribute('readonly');"
+            [class.error]="
+              editUserForm.get('password')?.invalid &&
+              editUserForm.get('password')?.touched
+            "
+            placeholder="Leave blank to keep current password"
+          />
+          <small class="form-help"
+            >Leave blank to keep the current password</small
+          >
+
+          <div
+            class="error-message"
+            *ngIf="
+              editUserForm.get('password')?.invalid &&
+              editUserForm.get('password')?.touched
+            "
+          >
+            <span
+              *ngIf="editUserForm.get('password')?.errors?.['invalidPassword']"
+            >
+              Password must contain at least one uppercase letter, one number,
+              and one special character
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editRole">Role *</label>
+          <select
+            id="editRole"
+            formControlName="role"
+            class="form-control"
+            [class.error]="
+              editUserForm.get('role')?.invalid &&
+              editUserForm.get('role')?.touched
+            "
+          >
+            <option value="" disabled selected hidden>Select a role</option>
+            <option *ngFor="let role of roles" [value]="role.name">
+              {{ role.name }}
+            </option>
+          </select>
+
+          <div
+            class="error-message"
+            *ngIf="
+              editUserForm.get('role')?.invalid &&
+              editUserForm.get('role')?.touched
+            "
+          >
+            <span *ngIf="editUserForm.get('role')?.errors?.['required']">
+              Role is required
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeEditModal()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!isEditFormValid"
+        >
+          {{ isLoading ? "Updating..." : "Update User" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
