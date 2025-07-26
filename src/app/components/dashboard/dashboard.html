@@ -25,6 +25,9 @@
       <!-- User Menu Section -->
       <div class="user-menu" (click)="toggleUserMenu($event)">
         <div class="user-avatar">
+          <div class="user-info">
+            <span class="user-role-badge">{{ userRole }}</span>
+          </div>
           <img
             src="assets/images/profile.png"
             alt="User Avatar"
@@ -33,7 +36,8 @@
         </div>
         <!-- User Dropdown Menu -->
         <div class="user-dropdown" [class.show]="isUserMenuOpen">
-          <div class="dropdown-item" (click)="navigateToUserManagement()">
+          <div class="dropdown-item" (click)="navigateToUserManagement()" 
+               *ngIf="(permissions$ | async)?.canAccessUserManagement">
             <img
               src="assets/images/user-management.png"
               alt="User Management Icon"
@@ -59,7 +63,8 @@
     <aside class="sidebar">
       <nav class="sidebar-nav">
         <ul class="nav-list">
-          <li class="nav-item" routerLinkActive="active">
+          <li class="nav-item" routerLinkActive="active" 
+              *ngIf="(permissions$ | async)?.canAccessAppLibrary">
             <a routerLink="app-library" class="nav-link">
               <img
                 src="assets/images/applications.png"
@@ -69,7 +74,8 @@
               <span class="nav-text">App Library</span>
             </a>
           </li>
-          <li class="nav-item" routerLinkActive="active">
+          <li class="nav-item" routerLinkActive="active"
+              *ngIf="(permissions$ | async)?.canAccessSelections">
             <a routerLink="selections" class="nav-link">
               <img
                 src="assets/images/love.png"
@@ -79,7 +85,8 @@
               <span class="nav-text">Selections</span>
             </a>
           </li>
-          <li class="nav-item" routerLinkActive="active">
+          <li class="nav-item" routerLinkActive="active"
+              *ngIf="(permissions$ | async)?.canAccessExplores">
             <a routerLink="explores" class="nav-link">
               <img
                 src="assets/images/filter.png"
@@ -92,10 +99,11 @@
         </ul>
 
         <!-- Spacer added here -->
-        <div style="margin-top: 40px"></div>
+        <div style="margin-top: 40px" *ngIf="canAccessManagementFeatures()"></div>
 
-        <ul class="nav-list">
-          <li class="nav-item" routerLinkActive="active">
+        <ul class="nav-list" *ngIf="canAccessManagementFeatures()">
+          <li class="nav-item" routerLinkActive="active"
+              *ngIf="(permissions$ | async)?.canAccessApplicationManagement">
             <a routerLink="applications-management" class="nav-link">
               <img
                 src="assets/images/app.png"
@@ -105,13 +113,15 @@
               <span class="nav-text">Applications Management</span>
             </a>
           </li>
-          <li class="nav-item" routerLinkActive="active">
+          <li class="nav-item" routerLinkActive="active"
+              *ngIf="(permissions$ | async)?.canAccessTeamManagement">
             <a routerLink="teams-management" class="nav-link">
               <img src="assets/images/teams.jpg" alt="Teams" class="nav-icon" />
               <span class="nav-text">Teams Management</span>
             </a>
           </li>
-          <li class="nav-item" routerLinkActive="active">
+          <li class="nav-item" routerLinkActive="active"
+              *ngIf="(permissions$ | async)?.canAccessSpocManagement">
             <a routerLink="spocs-management" class="nav-link">
               <img
                 src="assets/images/folder.png"

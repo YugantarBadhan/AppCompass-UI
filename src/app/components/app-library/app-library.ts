@@ -5,6 +5,7 @@ import {
   ApplicationService,
   Application,
 } from '../../services/application.service';
+import { PermissionService } from '../../services/permission.service';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 @Component({
@@ -41,7 +42,10 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
   private supportsPagination: boolean = true; // Whether backend supports pagination
   private supportsSearch: boolean = true; // Whether backend supports search
 
-  constructor(private applicationService: ApplicationService) {}
+  constructor(
+    private applicationService: ApplicationService,
+    private permissionService: PermissionService
+  ) {}
 
   ngOnInit(): void {
     this.setupSearchDebounce();
@@ -373,5 +377,10 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
 
   get shouldShowPagination(): boolean {
     return this.totalPages > 1 && !this.isLoading && !this.error;
+  }
+
+  // Helper method to check if user has admin access
+  isAdmin(): boolean {
+    return this.permissionService.isAdmin();
   }
 }

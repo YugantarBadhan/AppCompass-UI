@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { PermissionService, UserPermissions } from '../../services/permission.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,11 +19,21 @@ import { AuthService } from '../../services/auth.service';
 })
 export class DashboardComponent {
   isUserMenuOpen = false;
+  permissions$: Observable<UserPermissions>;
+  userRole: string = '';
 
   constructor(
     private authService: AuthService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private permissionService: PermissionService
+  ) {
+    this.permissions$ = this.permissionService.permissions$;
+    this.updateUserRole();
+  }
+
+  private updateUserRole(): void {
+    this.userRole = this.permissionService.getUserRoleDisplayName();
+  }
 
   toggleUserMenu(event: Event) {
     event.stopPropagation();
@@ -38,13 +50,24 @@ export class DashboardComponent {
   }
 
   navigateToUserManagement() {
-    this.router.navigate(['/dashboard/user-management']);
-    this.closeUserMenu();
+    if (this.permissionService.canAccessUserManagement()) {
+      this.router.navigate(['/dashboard/user-management']);
+      this.closeUserMenu();
+    }
   }
 
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
     this.closeUserMenu();
+  }
+
+  // Helper method to check if user can access management features
+  canAccessManagementFeatures(): boolean {
+    const permissions = this.permissionService.getCurrentUserPermissions();
+    return permissions.canAccessApplicationManagement || 
+           permissions.canAccessTeamManagement || 
+           permissions.canAccessSpocManagement || 
+           permissions.canAccessUserManagement;
   }
 }
