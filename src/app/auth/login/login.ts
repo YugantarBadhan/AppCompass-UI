@@ -11,7 +11,6 @@ import { AuthService } from '../../services/auth.service';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password';
 import { AlertComponent } from '../../components/alert/alert.component';
 import { LoadingComponent } from '../../components/dashboard/loading/loading.component';
-import { PermissionService } from '../../services/permission.service';
 
 @Component({
   selector: 'app-login',
@@ -36,8 +35,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router,
-    private permissionService: PermissionService
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -74,17 +72,7 @@ export class LoginComponent implements OnInit {
           this.isLoading = false;
           if (response.token) {
             console.log('Login successful', response);
-            // Refresh user profile after successful login to get role information
-            this.permissionService.refreshUserProfile().subscribe({
-              next: () => {
-                this.router.navigate(['/dashboard']);
-              },
-              error: (error) => {
-                console.error('Failed to load user profile after login:', error);
-                // Still navigate to dashboard, permissions will be loaded there
-                this.router.navigate(['/dashboard']);
-              }
-            });
+            this.router.navigate(['/dashboard']);
           } else {
             this.errorMessage = 'Login failed. No token received.';
           }

@@ -8,7 +8,6 @@ import { HTTP_INTERCEPTORS, provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { UserProfileService } from './services/user-profile.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,7 +16,6 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideHttpClient(),
     provideAnimations(),
-    UserProfileService,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,

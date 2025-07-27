@@ -4,7 +4,6 @@ import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthResponse, ForgotPasswordRequest, LoginCredentials } from '../models/auth/auth.models';
-import { PermissionService } from './permission.service';
 
 // Add this interface for forgot password response
 export interface ForgotPasswordResponse {

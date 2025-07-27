@@ -18,9 +18,6 @@ import { PermissionService } from '../../services/permission.service';
         <p class="unauthorized-submessage">
           Your current role: <strong>{{ getCurrentRole() }}</strong>
         </p>
-        <p class="unauthorized-submessage">
-          Username: <strong>{{ getUsername() }}</strong>
-        </p>
         <p class="unauthorized-info">
           Contact your administrator if you believe you should have access to this feature.
         </p>
@@ -162,10 +159,6 @@ export class UnauthorizedComponent {
 
   getCurrentRole(): string {
     return this.permissionService.getUserRoleDisplayName();
-  }
-
-  getUsername(): string {
-    return this.permissionService.getUsername();
   }
 
   goBack(): void {

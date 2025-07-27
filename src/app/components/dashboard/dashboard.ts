@@ -1,10 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PermissionService, UserPermissions } from '../../services/permission.service';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,12 +17,10 @@ import { takeUntil } from 'rxjs/operators';
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent {
   isUserMenuOpen = false;
   permissions$: Observable<UserPermissions>;
   userRole: string = '';
-  username: string = '';
-  private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
@@ -31,38 +28,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private permissionService: PermissionService
   ) {
     this.permissions$ = this.permissionService.permissions$;
+    this.updateUserRole();
   }
 
-  ngOnInit(): void {
-    // Subscribe to permission changes to update user info
-    this.permissions$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.updateUserInfo();
-    });
-
-    // Initial load of user info
-    this.updateUserInfo();
-
-    // Refresh user profile to ensure we have the latest data
-    this.permissionService.refreshUserProfile().subscribe({
-      next: () => {
-        this.updateUserInfo();
-      },
-      error: (error) => {
-        console.error('Failed to refresh user profile:', error);
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  private updateUserInfo(): void {
+  private updateUserRole(): void {
     this.userRole = this.permissionService.getUserRoleDisplayName();
-    this.username = this.permissionService.getUsername();
   }
 
   toggleUserMenu(event: Event) {
