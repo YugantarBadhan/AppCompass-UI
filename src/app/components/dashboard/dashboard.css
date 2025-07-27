@@ -68,28 +68,8 @@
   position: relative; /* Changed from absolute for better alignment */
   display: flex;
   align-items: center;
-  gap: 12px;
   cursor: pointer;
   height: 100%;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.user-role-badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748b;
-  background-color: #f1f5f9;
-  padding: 2px 8px;
-  border-radius: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid #e2e8f0;
 }
 
 .user-avatar {
@@ -326,10 +306,6 @@
   .user-dropdown {
     right: -16px;
     min-width: 180px;
-  }
-
-  .user-info {
-    display: none; /* Hide role badge on mobile */
   }
 
   .dropdown-item {
