@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-import { jwtDecode } from 'jwt-decode';
+import { UserProfileService, UserProfile } from './user-profile.service';
 
 export interface UserPermissions {
   canAccessApplicationManagement: boolean;
@@ -13,32 +14,32 @@ export interface UserPermissions {
   canAccessExplores: boolean;
 }
 
-interface JwtPayload {
-  sub: string;
-  role: string;
-  exp: number;
-  iat: number;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class PermissionService {
   private permissionsSubject = new BehaviorSubject<UserPermissions>(this.getDefaultPermissions());
   public permissions$ = this.permissionsSubject.asObservable();
+  private currentUserProfile: UserProfile | null = null;
 
-  constructor(private authService: AuthService) {
-    // Initialize permissions when service is created
-    this.updatePermissions();
-    
+  constructor(
+    private authService: AuthService,
+    private userProfileService: UserProfileService
+  ) {
     // Subscribe to authentication changes
     this.authService.isAuthenticated$.subscribe(isAuth => {
       if (isAuth) {
-        this.updatePermissions();
+        this.loadUserProfileAndUpdatePermissions();
       } else {
         this.resetPermissions();
+        this.currentUserProfile = null;
       }
     });
+
+    // Initialize permissions if user is already authenticated
+    if (this.authService.isAuthenticated()) {
+      this.loadUserProfileAndUpdatePermissions();
+    }
   }
 
   private getDefaultPermissions(): UserPermissions {
@@ -53,33 +54,53 @@ export class PermissionService {
     };
   }
 
-  private updatePermissions(): void {
-    const userRole = this.getCurrentUserRole();
-    const permissions = this.calculatePermissions(userRole);
-    this.permissionsSubject.next(permissions);
+  private loadUserProfileAndUpdatePermissions(): void {
+    this.userProfileService.getCurrentUserProfile().subscribe({
+      next: (profile) => {
+        this.currentUserProfile = profile;
+        const permissions = this.calculatePermissions(profile.role);
+        this.permissionsSubject.next(permissions);
+      },
+      error: (error) => {
+        console.error('Failed to load user profile:', error);
+        this.resetPermissions();
+        this.currentUserProfile = null;
+      }
+    });
   }
 
   private resetPermissions(): void {
     this.permissionsSubject.next(this.getDefaultPermissions());
+    this.userProfileService.clearUserProfile();
   }
 
   getCurrentUserRole(): string | null {
-    const token = this.authService.token;
-    if (!token) {
-      return null;
-    }
-
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      return decoded.role || null;
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      return null;
-    }
+    return this.currentUserProfile?.role || null;
   }
 
   getCurrentUserPermissions(): UserPermissions {
     return this.permissionsSubject.value;
+  }
+
+  getCurrentUserProfile(): UserProfile | null {
+    return this.currentUserProfile;
+  }
+
+  // Method to refresh user profile and permissions
+  refreshUserProfile(): Observable<UserProfile> {
+    return this.userProfileService.getCurrentUserProfile().pipe(
+      tap((profile) => {
+        this.currentUserProfile = profile;
+        const permissions = this.calculatePermissions(profile.role);
+        this.permissionsSubject.next(permissions);
+      }),
+      catchError((error) => {
+        console.error('Failed to refresh user profile:', error);
+        this.resetPermissions();
+        this.currentUserProfile = null;
+        return of(null as any);
+      })
+    );
   }
 
   private calculatePermissions(role: string | null): UserPermissions {
@@ -89,8 +110,9 @@ export class PermissionService {
       return defaultPermissions;
     }
 
-    // Admin role has access to everything
-    if (role.toLowerCase() === 'admin') {
+    // Admin role has access to everything (case-insensitive check)
+    const normalizedRole = role.toLowerCase().trim();
+    if (normalizedRole === 'admin' || normalizedRole === 'administrator') {
       return {
         canAccessApplicationManagement: true,
         canAccessTeamManagement: true,
@@ -102,7 +124,20 @@ export class PermissionService {
       };
     }
 
-    // All other roles only have access to basic functionalities
+    // Manager role has access to some management features
+    if (normalizedRole === 'manager') {
+      return {
+        canAccessApplicationManagement: true,
+        canAccessTeamManagement: true,
+        canAccessSpocManagement: true,
+        canAccessUserManagement: false,
+        canAccessAppLibrary: true,
+        canAccessSelections: true,
+        canAccessExplores: true,
+      };
+    }
+
+    // All other roles (user, read, etc.) only have access to basic functionalities
     return {
       canAccessApplicationManagement: false,
       canAccessTeamManagement: false,
@@ -146,12 +181,28 @@ export class PermissionService {
   // Check if user is admin
   isAdmin(): boolean {
     const role = this.getCurrentUserRole();
-    return role?.toLowerCase() === 'admin';
+    if (!role) return false;
+    const normalizedRole = role.toLowerCase().trim();
+    return normalizedRole === 'admin' || normalizedRole === 'administrator';
+  }
+
+  // Check if user is manager
+  isManager(): boolean {
+    const role = this.getCurrentUserRole();
+    if (!role) return false;
+    const normalizedRole = role.toLowerCase().trim();
+    return normalizedRole === 'manager';
   }
 
   // Get user role display name
   getUserRoleDisplayName(): string {
-    const role = this.getCurrentUserRole();
-    return role || 'Unknown';
+    const profile = this.getCurrentUserProfile();
+    return profile?.role || 'Unknown';
+  }
+
+  // Get username
+  getUsername(): string {
+    const profile = this.getCurrentUserProfile();
+    return profile?.username || 'Unknown User';
   }
 }
