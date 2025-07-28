@@ -29,6 +29,14 @@ export class SelectionsComponent implements OnInit, OnDestroy {
   selectedApplicationDetails: ApplicationDetails | null = null;
   isLoadingDetails: boolean = false;
 
+  // Spoc contact state
+  showSpocPopup: boolean = false;
+  spocPopupMessage: string = '';
+
+  // Application URL state
+  showUrlPopup: boolean = false;
+  urlPopupMessage: string = '';
+
   currentPage: number = 1;
   itemsPerPage: number = 6;
   totalItems: number = 0;
@@ -142,6 +150,96 @@ export class SelectionsComponent implements OnInit, OnDestroy {
         app.favorite = true;
       },
     });
+  }
+
+  /**
+   * Handle Contact Spoc button click
+   */
+  contactSpoc(event: Event, app: Application): void {
+    event.stopPropagation();
+
+    // Check if email array exists and has emails
+    if (!app.email || !Array.isArray(app.email) || app.email.length === 0) {
+      // Show popup for no emails
+      this.spocPopupMessage = 'No Spoc assigned to this application.';
+      this.showSpocPopup = true;
+      return;
+    }
+
+    // Filter out empty emails and create comma-separated string
+    const validEmails = app.email.filter(
+      (email) => email && email.trim() !== ''
+    );
+
+    if (validEmails.length === 0) {
+      this.spocPopupMessage =
+        'No valid Spoc email assigned to this application.';
+      this.showSpocPopup = true;
+      return;
+    }
+
+    // Create mailto link with comma-separated emails
+    const emailList = validEmails.join(',');
+    const subject = encodeURIComponent(`Regarding ${app.appName} Application`);
+    const mailtoUrl = `mailto:${emailList}?subject=${subject}`;
+
+    // Open default email client
+    window.location.href = mailtoUrl;
+  }
+
+  /**
+   * Handle Application URL button click
+   */
+  openApplicationUrl(event: Event, app: Application): void {
+    event.stopPropagation();
+
+    // Check if applicationUrl exists
+    if (!app.applicationUrl || app.applicationUrl.trim() === '') {
+      this.urlPopupMessage = 'No application URL is available for this application.';
+      this.showUrlPopup = true;
+      return;
+    }
+
+    const url = app.applicationUrl.trim();
+
+    // Validate URL format
+    if (!this.isValidUrl(url)) {
+      this.urlPopupMessage = 'The application URL is not valid or accessible.';
+      this.showUrlPopup = true;
+      return;
+    }
+
+    // Open URL in new tab
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  /**
+   * Validate URL format
+   */
+  private isValidUrl(urlString: string): boolean {
+    try {
+      const url = new URL(urlString);
+      // Check if it's http or https protocol
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Close the Spoc popup
+   */
+  closeSpocPopup(): void {
+    this.showSpocPopup = false;
+    this.spocPopupMessage = '';
+  }
+
+  /**
+   * Close the URL popup
+   */
+  closeUrlPopup(): void {
+    this.showUrlPopup = false;
+    this.urlPopupMessage = '';
   }
 
   changePage(page: number): void {

@@ -38,6 +38,10 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
   showSpocPopup: boolean = false;
   spocPopupMessage: string = '';
 
+  // Application URL state
+  showUrlPopup: boolean = false;
+  urlPopupMessage: string = '';
+
   private supportsPagination: boolean = true; // Whether backend supports pagination
   private supportsSearch: boolean = true; // Whether backend supports search
 
@@ -120,11 +124,58 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle Application URL button click
+   */
+  openApplicationUrl(event: Event, app: Application): void {
+    event.stopPropagation();
+
+    // Check if applicationUrl exists
+    if (!app.applicationUrl || app.applicationUrl.trim() === '') {
+      this.urlPopupMessage = 'No application URL is available for this application.';
+      this.showUrlPopup = true;
+      return;
+    }
+
+    const url = app.applicationUrl.trim();
+
+    // Validate URL format
+    if (!this.isValidUrl(url)) {
+      this.urlPopupMessage = 'The application URL is not valid or accessible.';
+      this.showUrlPopup = true;
+      return;
+    }
+
+    // Open URL in new tab
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  /**
+   * Validate URL format
+   */
+  private isValidUrl(urlString: string): boolean {
+    try {
+      const url = new URL(urlString);
+      // Check if it's http or https protocol
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
    * Close the Spoc popup
    */
   closeSpocPopup(): void {
     this.showSpocPopup = false;
     this.spocPopupMessage = '';
+  }
+
+  /**
+   * Close the URL popup
+   */
+  closeUrlPopup(): void {
+    this.showUrlPopup = false;
+    this.urlPopupMessage = '';
   }
 
   private setupSearchDebounce(): void {

@@ -22,6 +22,7 @@ export interface Application {
   initials?: string;
   gradientColors?: string[];
   email?: string[];
+  applicationUrl?: string;
 }
 
 export interface ApplicationDetails {

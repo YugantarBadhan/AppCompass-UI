@@ -87,6 +87,13 @@
         />
       </button>
 
+      <!-- Contact Spoc Button -->
+      <button class="contact-spoc-button" (click)="contactSpoc($event, app)" title="Contact Spoc"
+        aria-label="Contact Spoc for this application">
+        <i class="fas fa-envelope"></i>
+        <span class="spoc-text">Contact Spoc</span>
+      </button>
+
       <div class="app-icon" [style.background]="getApplicationGradient(app)">
         <i *ngIf="app.icon" [class]="'fas fa-' + app.icon"></i>
         <span *ngIf="!app.icon" class="app-initials">{{
@@ -176,6 +183,15 @@
           >
             {{ selectedApplication.active ? "Active" : "Inactive" }}
           </span>
+        </div>
+
+        <!-- Application URL Section -->
+        <div class="app-url-section">
+          <button class="app-url-button" (click)="openApplicationUrl($event, selectedApplication)" 
+            title="Open Application" aria-label="Open application in new tab">
+            <i class="fas fa-external-link-alt"></i>
+            <span class="url-text">Open Application</span>
+          </button>
         </div>
 
         <!-- Loading indicator for details -->
@@ -286,5 +302,51 @@
       Showing {{ resultsStartIndex }}-{{ resultsEndIndex }} of
       {{ totalItems }} favorite applications
     </p>
+  </div>
+
+  <!-- Spoc Popup Modal -->
+  <div class="spoc-popup-overlay" *ngIf="showSpocPopup" (click)="closeSpocPopup()">
+    <div class="spoc-popup" (click)="$event.stopPropagation()">
+      <div class="spoc-popup-header">
+        <h3>Contact Spoc</h3>
+        <button class="spoc-popup-close" (click)="closeSpocPopup()" title="Close">
+          ×
+        </button>
+      </div>
+      <div class="spoc-popup-content">
+        <div class="spoc-popup-icon">
+          <i class="fas fa-info-circle"></i>
+        </div>
+        <p class="spoc-popup-message">{{ spocPopupMessage }}</p>
+      </div>
+      <div class="spoc-popup-footer">
+        <button class="spoc-popup-ok-button" (click)="closeSpocPopup()">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application URL Popup Modal -->
+  <div class="url-popup-overlay" *ngIf="showUrlPopup" (click)="closeUrlPopup()">
+    <div class="url-popup" (click)="$event.stopPropagation()">
+      <div class="url-popup-header">
+        <h3>Application URL</h3>
+        <button class="url-popup-close" (click)="closeUrlPopup()" title="Close">
+          ×
+        </button>
+      </div>
+      <div class="url-popup-content">
+        <div class="url-popup-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <p class="url-popup-message">{{ urlPopupMessage }}</p>
+      </div>
+      <div class="url-popup-footer">
+        <button class="url-popup-ok-button" (click)="closeUrlPopup()">
+          OK
+        </button>
+      </div>
+    </div>
   </div>
 </div>

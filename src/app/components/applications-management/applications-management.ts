@@ -6,6 +6,7 @@ import { ApplicationService } from '../../services/application.service';
 interface Application {
   appId: number;
   appName: string;
+  applicationUrl?: string;
   appDescription?: string;
   active: boolean;
 }
@@ -54,12 +55,14 @@ export class ApplicationsManagementComponent implements OnInit {
   private initializeForms(): void {
     this.registerForm = this.fb.group({
       appName: ['', [Validators.required, Validators.minLength(3)]],
+      applicationUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
       appDescription: ['', [Validators.required, Validators.minLength(10)]]
     });
 
     this.updateForm = this.fb.group({
       selectedAppId: [null, [Validators.required]],
       appName: ['', [Validators.required, Validators.minLength(3)]],
+      applicationUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
       appDescription: ['', [Validators.required, Validators.minLength(10)]]
     });
 
@@ -107,9 +110,11 @@ export class ApplicationsManagementComponent implements OnInit {
     if (selectedAppId) {
       const selectedApp = this.applications.find(app => app.appId === selectedAppId);
       if (selectedApp) {
+        console.log('Selected application:', selectedApp); // Debug log to check data
         this.updateForm.patchValue({
           selectedAppId: selectedAppId,
-          appName: selectedApp.appName,
+          appName: selectedApp.appName || '',
+          applicationUrl: selectedApp.applicationUrl || '',
           appDescription: selectedApp.appDescription || ''
         });
       }
@@ -117,6 +122,7 @@ export class ApplicationsManagementComponent implements OnInit {
       this.updateForm.patchValue({
         selectedAppId: null,
         appName: '',
+        applicationUrl: '',
         appDescription: ''
       });
     }
@@ -159,6 +165,7 @@ export class ApplicationsManagementComponent implements OnInit {
       this.clearMessages();
       const formData = {
         appName: this.registerForm.get('appName')?.value,
+        applicationUrl: this.registerForm.get('applicationUrl')?.value,
         appDescription: this.registerForm.get('appDescription')?.value
       };
       this.applicationService.registerApplication(formData).subscribe({
@@ -192,6 +199,7 @@ export class ApplicationsManagementComponent implements OnInit {
       this.clearMessages();
       const formData = {
         appName: this.updateForm.get('appName')?.value,
+        applicationUrl: this.updateForm.get('applicationUrl')?.value,
         appDescription: this.updateForm.get('appDescription')?.value
       };
       
@@ -299,6 +307,9 @@ export class ApplicationsManagementComponent implements OnInit {
         const minLength = field.errors['minlength'].requiredLength;
         return `${this.getFieldDisplayName(fieldName)} must be at least ${minLength} characters.`;
       }
+      if (field.errors['pattern']) {
+        return `${this.getFieldDisplayName(fieldName)} must be a valid URL starting with http:// or https://`;
+      }
     }
     return '';
   }
@@ -306,6 +317,7 @@ export class ApplicationsManagementComponent implements OnInit {
   private getFieldDisplayName(fieldName: string): string {
     const displayNames: { [key: string]: string } = {
       'appName': 'Application Name',
+      'applicationUrl': 'Application URL',
       'appDescription': 'Application Description',
       'selectedAppId': 'Application Selection'
     };
