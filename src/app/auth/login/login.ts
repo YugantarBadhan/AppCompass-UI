@@ -71,6 +71,8 @@ export class LoginComponent implements OnInit {
         next: (response) => {
           this.isLoading = false;
           if (response.token) {
+            localStorage.setItem('role', response.role);
+            localStorage.setItem('username', response.username);
             console.log('Login successful', response);
             this.router.navigate(['/dashboard']);
           } else {

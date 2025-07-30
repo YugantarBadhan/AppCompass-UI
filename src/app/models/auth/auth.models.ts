@@ -6,6 +6,8 @@ export interface LoginCredentials {
 
 export interface AuthResponse {
   token: string;
+  role: string;
+  username: string;
 }
 
 // Forgot password related interfaces

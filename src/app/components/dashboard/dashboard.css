@@ -76,7 +76,9 @@
   display: flex;
   align-items: center;
   height: 100%;
+  margin-left: 10px;
 }
+
 
 .avatar-img {
   width: 36px; /* Slightly smaller for header */
