@@ -89,7 +89,7 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle Contact Spoc button click
+   * Handle Contact Spoc button click with mail template
    */
   contactSpoc(event: Event, app: Application): void {
     event.stopPropagation();
@@ -114,10 +114,33 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Create mailto link with comma-separated emails
+    // Get username from localStorage and extract name part (before @)
+    const fullUsername = localStorage.getItem('username') || 'User';
+    const userName = fullUsername.includes('@')
+      ? fullUsername.split('@')[0]
+      : fullUsername;
+
+    // Create email template
+    const subject = encodeURIComponent(
+      `Access Request for ${app.appName} Application`
+    );
+
+    const bodyTemplate = `Dear Team,
+
+I recently visited the AppCompass portal and came across the ${app.appName} application. Based on its features and description, I believe it aligns well with my current requirements and would like to explore its functionalities further.
+
+Kindly grant me access to this application at your earliest convenience.
+
+Thank you for your support.
+
+Best regards,
+${userName}`;
+
+    const encodedBody = encodeURIComponent(bodyTemplate);
+
+    // Create mailto link with comma-separated emails, subject, and body
     const emailList = validEmails.join(',');
-    const subject = encodeURIComponent(`Regarding ${app.appName} Application`);
-    const mailtoUrl = `mailto:${emailList}?subject=${subject}`;
+    const mailtoUrl = `mailto:${emailList}?subject=${subject}&body=${encodedBody}`;
 
     // Open default email client
     window.location.href = mailtoUrl;
@@ -131,7 +154,8 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
 
     // Check if applicationUrl exists
     if (!app.applicationUrl || app.applicationUrl.trim() === '') {
-      this.urlPopupMessage = 'No application URL is available for this application.';
+      this.urlPopupMessage =
+        'No application URL is available for this application.';
       this.showUrlPopup = true;
       return;
     }
