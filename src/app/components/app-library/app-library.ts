@@ -15,7 +15,8 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
   styleUrls: ['./app-library.css'],
 })
 export class AppLibraryComponent implements OnInit, OnDestroy {
-  applications: Application[] = []; // List of applications to render
+  allApplications: Application[] = []; // All applications from backend
+  filteredApplications: Application[] = []; // Filtered applications based on search
   searchTerm: string = ''; // User input for search
   isLoading: boolean = true; // Loading spinner for first load
   isSearching: boolean = false; // Show spinner while searching
@@ -41,9 +42,6 @@ export class AppLibraryComponent implements OnInit, OnDestroy {
   // Application URL state
   showUrlPopup: boolean = false;
   urlPopupMessage: string = '';
-
-  private supportsPagination: boolean = true; // Whether backend supports pagination
-  private supportsSearch: boolean = true; // Whether backend supports search
 
   constructor(private applicationService: ApplicationService) {}
 
@@ -206,87 +204,83 @@ ${userName}`;
     this.searchSubject
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((searchTerm) => {
-        this.performBackendSearch(searchTerm);
+        this.performSearch(searchTerm);
       });
   }
 
-  loadApplications(page: number = 1, search: string = ''): void {
-    this.isLoading = page === 1;
-    this.isSearching = search.length > 0;
+  /**
+   * Load all applications from backend (no pagination API call)
+   */
+  loadApplications(): void {
+    this.isLoading = true;
     this.error = null;
+    console.log('Starting to load applications...');
 
-    const params = {
-      page: page,
-      limit: this.itemsPerPage,
-      search: search.trim(),
-    };
-
-    this.applicationService.getApplicationsWithPagination(params).subscribe({
-      next: (response) => {
-        this.applications = response.data || [];
-        this.totalItems = response.total || 0;
-        this.totalPages = response.totalPages || 0;
-        this.currentPage = response.currentPage || page;
+    this.applicationService.getAllApplications().subscribe({
+      next: (applications) => {
+        console.log('Raw response from API:', applications);
+        this.allApplications = applications || [];
+        this.filteredApplications = [...this.allApplications];
+        this.updatePaginationInfo();
         this.isLoading = false;
-        this.isSearching = false;
-        this.supportsPagination = response.totalPages > 0;
+        console.log(
+          'Applications loaded successfully:',
+          this.allApplications.length
+        );
+        console.log('Filtered applications:', this.filteredApplications.length);
+        console.log('Total pages:', this.totalPages);
+        console.log(
+          'Current page applications:',
+          this.paginatedApplications.length
+        );
       },
       error: (error) => {
-        this.handleLoadError(error);
+        console.error('Error loading applications:', error);
+        this.error = error.error?.message || 'Failed to load applications';
+        this.allApplications = [];
+        this.filteredApplications = [];
+        this.updatePaginationInfo();
+        this.isLoading = false;
       },
     });
   }
 
-  private handleLoadError(error: any): void {
-    console.error('Component: Error loading applications', error);
+  /**
+   * Update pagination information based on filtered applications
+   */
+  private updatePaginationInfo(): void {
+    this.totalItems = this.filteredApplications.length;
+    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
 
-    if (this.supportsPagination && this.searchTerm.trim() === '') {
-      console.log('Component: Attempting fallback to getAll');
-      this.fallbackToGetAll();
-    } else {
-      this.error = error.error?.message || 'Failed to load applications';
-      this.applications = [];
-      this.totalItems = 0;
-      this.totalPages = 0;
-      this.isLoading = false;
-      this.isSearching = false;
-      this.supportsPagination = false;
+    // Reset to first page if current page is beyond available pages
+    if (this.currentPage > this.totalPages && this.totalPages > 0) {
+      this.currentPage = 1;
+    }
+
+    // Ensure current page is at least 1
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
     }
   }
 
-  private fallbackToGetAll(): void {
-    console.log('Component: Using getAll fallback');
-    this.applicationService.getAllApplications().subscribe({
-      next: (applications) => {
-        this.applications = applications || [];
-        this.totalItems = this.applications.length;
-        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-        this.currentPage = 1;
-        this.isLoading = false;
-        this.isSearching = false;
-        this.supportsPagination = false;
-      },
-      error: (error) => {
-        this.error = error.error?.message || 'Failed to load applications';
-        this.applications = [];
-        this.totalItems = 0;
-        this.totalPages = 0;
-        this.isLoading = false;
-        this.isSearching = false;
-        console.error('Component: Fallback to getAll also failed', error);
-      },
-    });
-  }
-
+  /**
+   * Handle search input with debouncing
+   */
   onSearchInput(): void {
     this.searchSubject.next(this.searchTerm);
   }
 
+  /**
+   * Handle search button click
+   */
   onSearch(): void {
     this.triggerSearchAnimation();
-    this.performBackendSearch(this.searchTerm);
+    this.performSearch(this.searchTerm);
   }
 
+  /**
+   * Trigger search animation
+   */
   private triggerSearchAnimation(): void {
     this.isSearchAnimating = true;
     setTimeout(() => {
@@ -294,40 +288,68 @@ ${userName}`;
     }, 600);
   }
 
-  private performBackendSearch(searchTerm: string): void {
+  /**
+   * Perform frontend search filtering
+   */
+  private performSearch(searchTerm: string): void {
+    this.isSearching = true;
     this.currentPage = 1;
     this.jumpToPage = null;
     this.flippedCardId = null;
 
-    if (searchTerm.trim() === '') {
-      this.loadApplications(1, '');
-    } else {
-      this.loadApplications(1, searchTerm);
-    }
+    // Simulate a small delay for better UX
+    setTimeout(() => {
+      const trimmedSearchTerm = searchTerm.trim().toLowerCase();
+
+      if (trimmedSearchTerm === '') {
+        this.filteredApplications = [...this.allApplications];
+      } else {
+        this.filteredApplications = this.allApplications.filter((app) => {
+          return (
+            app.appName.toLowerCase().includes(trimmedSearchTerm) ||
+            app.appDescription.toLowerCase().includes(trimmedSearchTerm)
+          );
+        });
+      }
+
+      this.updatePaginationInfo();
+      this.isSearching = false;
+    }, 200);
   }
 
+  /**
+   * Refresh applications by reloading from backend
+   */
   refreshApplications(): void {
     this.searchTerm = '';
     this.currentPage = 1;
     this.jumpToPage = null;
     this.flippedCardId = null;
-    this.supportsPagination = true;
-    this.supportsSearch = true;
-    this.loadApplications(1, '');
+    this.loadApplications();
   }
 
+  /**
+   * Clear search and show all applications
+   */
   clearSearch(): void {
     this.searchTerm = '';
     this.currentPage = 1;
     this.jumpToPage = null;
     this.flippedCardId = null;
-    this.loadApplications(1, '');
+    this.filteredApplications = [...this.allApplications];
+    this.updatePaginationInfo();
   }
 
+  /**
+   * Get application icon or initials
+   */
   getApplicationIcon(app: Application): string {
     return app.icon || app.initials || app.appName.charAt(0).toUpperCase();
   }
 
+  /**
+   * Get application gradient colors
+   */
   getApplicationGradient(app: Application): string {
     if (app.gradientColors && app.gradientColors.length >= 2) {
       return `linear-gradient(135deg, ${app.gradientColors[0]}, ${app.gradientColors[1]})`;
@@ -335,16 +357,25 @@ ${userName}`;
     return 'linear-gradient(135deg, #667eea, #764ba2)';
   }
 
+  /**
+   * Get paginated applications for current page
+   */
   get paginatedApplications(): Application[] {
-    if (this.supportsPagination) {
-      return this.applications;
-    } else {
-      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-      const endIndex = startIndex + this.itemsPerPage;
-      return this.applications.slice(startIndex, endIndex);
-    }
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredApplications.slice(startIndex, endIndex);
   }
 
+  /**
+   * Get applications array (for template compatibility)
+   */
+  get applications(): Application[] {
+    return this.paginatedApplications;
+  }
+
+  /**
+   * Get pagination items for display
+   */
   get paginationItems(): Array<{ type: 'page' | 'ellipsis'; value: number }> {
     const items: Array<{ type: 'page' | 'ellipsis'; value: number }> = [];
     const totalPages = this.totalPages;
@@ -380,39 +411,52 @@ ${userName}`;
     return items;
   }
 
+  /**
+   * Change to specific page
+   */
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.currentPage = page;
       this.flippedCardId = null;
       this.jumpToPage = null;
-
-      if (this.supportsPagination) {
-        this.loadApplications(page, this.searchTerm);
-      } else {
-        this.currentPage = page;
-      }
     }
   }
 
+  /**
+   * Go to first page
+   */
   goToFirstPage(): void {
     this.changePage(1);
   }
 
+  /**
+   * Go to last page
+   */
   goToLastPage(): void {
     this.changePage(this.totalPages);
   }
 
+  /**
+   * Go to previous page
+   */
   goToPreviousPage(): void {
     if (this.currentPage > 1) {
       this.changePage(this.currentPage - 1);
     }
   }
 
+  /**
+   * Go to next page
+   */
   goToNextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.changePage(this.currentPage + 1);
     }
   }
 
+  /**
+   * Jump to specific page from input
+   */
   performPageJump(): void {
     if (
       this.jumpToPage &&
@@ -423,30 +467,66 @@ ${userName}`;
     }
   }
 
+  /**
+   * Check if any card is flipped
+   */
   isAnyCardFlipped(): boolean {
     return this.flippedCardId !== null;
   }
 
+  /**
+   * Handle card click to flip it
+   */
   handleCardClick(cardId: number): void {
     if (this.flippedCardId === null) {
       this.flippedCardId = cardId;
     }
   }
 
+  /**
+   * Close flipped card
+   */
   closeFlip(event: Event): void {
     event.stopPropagation();
     this.flippedCardId = null;
   }
 
+  /**
+   * Get results start index for display
+   */
   get resultsStartIndex(): number {
+    if (this.totalItems === 0) return 0;
     return (this.currentPage - 1) * this.itemsPerPage + 1;
   }
 
+  /**
+   * Get results end index for display
+   */
   get resultsEndIndex(): number {
     return Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
   }
 
+  /**
+   * Check if pagination should be shown
+   */
   get shouldShowPagination(): boolean {
     return this.totalPages > 1 && !this.isLoading && !this.error;
+  }
+
+  /**
+   * TrackBy function for application cards (improves performance)
+   */
+  trackByAppId(index: number, app: Application): number {
+    return app.appId;
+  }
+
+  /**
+   * TrackBy function for pagination items (improves performance)
+   */
+  trackByPaginationItem(
+    index: number,
+    item: { type: 'page' | 'ellipsis'; value: number }
+  ): string {
+    return `${item.type}-${item.value}-${index}`;
   }
 }

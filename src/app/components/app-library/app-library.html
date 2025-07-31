@@ -2,26 +2,49 @@
   <!-- Search Section -->
   <div class="search-section">
     <div class="search-container">
-      <input type="text" class="search-input" placeholder="Search applications..." [(ngModel)]="searchTerm"
-        (input)="onSearchInput()" (keyup.enter)="onSearch()" />
-      <button class="search-button" (click)="onSearch()" [class.searching]="isSearchAnimating">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search applications..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchInput()"
+        (keyup.enter)="onSearch()"
+      />
+      <button
+        class="search-button"
+        (click)="onSearch()"
+        [class.searching]="isSearchAnimating"
+        [disabled]="isLoading"
+      >
         <img src="assets/images/search.png" alt="Search" class="search-icon" />
       </button>
     </div>
-    <button class="refresh-button" (click)="refreshApplications()" [disabled]="isLoading">
-      <img src="assets/images/refresh.png" alt="Refresh" class="refresh-icon" [class.spinning]="isLoading" />
+    <button
+      class="refresh-button"
+      (click)="refreshApplications()"
+      [disabled]="isLoading"
+      title="Refresh applications"
+    >
+      <img
+        src="assets/images/refresh.png"
+        alt="Refresh"
+        class="refresh-icon"
+        [class.spinning]="isLoading"
+      />
     </button>
   </div>
 
-  <!-- Loading -->
+  <!-- Loading State -->
   <div *ngIf="isLoading && !error" class="loading-container">
     <div class="loading-spinner"></div>
     <p class="loading-text">Loading applications...</p>
   </div>
 
-  <!-- Error -->
+  <!-- Error State -->
   <div *ngIf="error" class="error-container">
-    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="error-icon">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
     <h3 class="error-title">Unable to Load Applications</h3>
     <p class="error-message">{{ error }}</p>
     <button class="retry-button" (click)="refreshApplications()">
@@ -29,62 +52,106 @@
     </button>
   </div>
 
-  <!-- Application Cards -->
-  <div *ngIf="!isLoading && !error && applications.length > 0" class="applications-grid">
-    <div *ngFor="let app of paginatedApplications" class="application-card"
-      [class.flipped]="flippedCardId === app.appId" [class.inactive]="!app.active"
-      [class.disabled]="isAnyCardFlipped() && flippedCardId !== app.appId">
+  <!-- Application Cards Grid -->
+  <div
+    *ngIf="!isLoading && !error && applications.length > 0"
+    class="applications-grid"
+  >
+    <div
+      *ngFor="let app of applications; trackBy: trackByAppId"
+      class="application-card"
+      [class.flipped]="flippedCardId === app.appId"
+      [class.inactive]="!app.active"
+      [class.disabled]="isAnyCardFlipped() && flippedCardId !== app.appId"
+    >
       <div class="card-inner" (click)="handleCardClick(app.appId)">
         <!-- Card Front -->
         <div class="card-face card-front">
-          <!-- 💜 Favourite – now first child -->
-          <button class="favorite-button" (click)="toggleFavorite($event, app)" [class.favorited]="isFavorite(app)"
+          <!-- Favorite Button -->
+          <button
+            class="favorite-button"
+            (click)="toggleFavorite($event, app)"
+            [class.favorited]="isFavorite(app)"
             [title]="
               isFavorite(app) ? 'Remove from favourites' : 'Add to favourites'
-            " aria-label="Toggle favourite">
-            <img [src]="
+            "
+            [attr.aria-label]="
+              isFavorite(app) ? 'Remove from favourites' : 'Add to favourites'
+            "
+          >
+            <img
+              [src]="
                 isFavorite(app)
                   ? 'assets/images/heart-filled.png'
                   : 'assets/images/heart.png'
-              " alt="Favorite" class="heart-icon" />
+              "
+              alt="Favorite"
+              class="heart-icon"
+            />
           </button>
 
-          <!-- Contact Spoc Button -->
-          <button class="contact-spoc-button" (click)="contactSpoc($event, app)" title="Contact Spoc"
-            aria-label="Contact Spoc for this application">
+          <!-- Contact SPOC Button -->
+          <button
+            class="contact-spoc-button"
+            (click)="contactSpoc($event, app)"
+            title="Contact SPOC"
+            aria-label="Contact SPOC for this application"
+          >
             <i class="fas fa-envelope"></i>
-            <span class="spoc-text">Contact Spoc</span>
+            <span class="spoc-text">Contact SPOC</span>
           </button>
 
-          <div class="app-icon" [style.background]="getApplicationGradient(app)">
+          <!-- App Icon -->
+          <div
+            class="app-icon"
+            [style.background]="getApplicationGradient(app)"
+          >
             <i *ngIf="app.icon" [class]="'fas fa-' + app.icon"></i>
             <span *ngIf="!app.icon" class="app-initials">{{
               getApplicationIcon(app)
-              }}</span>
+            }}</span>
           </div>
+
+          <!-- App Info -->
           <div class="app-info">
             <h3 class="app-name">{{ app.appName }}</h3>
             <p class="app-description">
-              {{ app.appDescription | slice : 0 : 97
-              }}{{ app.appDescription.length > 97 ? "..." : "" }}
+              {{
+                (app.appDescription || "").length > 97
+                  ? (app.appDescription | slice : 0 : 97) + "..."
+                  : app.appDescription || "No description available"
+              }}
             </p>
             <div class="app-status">
-              <span class="status-indicator" [class.active]="app.active" [class.inactive]="!app.active"></span>
+              <span
+                class="status-indicator"
+                [class.active]="app.active"
+                [class.inactive]="!app.active"
+              ></span>
               <span class="status-text">{{
                 app.active ? "Active" : "Inactive"
-                }}</span>
+              }}</span>
             </div>
           </div>
         </div>
 
         <!-- Card Back -->
         <div class="card-face card-back">
-          <button class="close-x-button" (click)="closeFlip($event)" title="Close">
+          <button
+            class="close-x-button"
+            (click)="closeFlip($event)"
+            title="Close"
+            aria-label="Close card details"
+          >
             ×
           </button>
+
           <div class="card-back-content">
             <h3>{{ app.appName }}</h3>
-            <div class="card-back-description">{{ app.appDescription }}</div>
+            <div class="card-back-description">
+              {{ app.appDescription || "No description available" }}
+            </div>
+
             <div class="status-info">
               <p>
                 Status:
@@ -93,11 +160,15 @@
                 </strong>
               </p>
             </div>
-            
+
             <!-- Application URL Button -->
             <div class="app-url-section">
-              <button class="app-url-button" (click)="openApplicationUrl($event, app)" 
-                title="Open Application" aria-label="Open application in new tab">
+              <button
+                class="app-url-button"
+                (click)="openApplicationUrl($event, app)"
+                title="Open Application"
+                aria-label="Open application in new tab"
+              >
                 <i class="fas fa-external-link-alt"></i>
                 <span class="url-text">Open Application</span>
               </button>
@@ -108,70 +179,133 @@
     </div>
   </div>
 
-  <!-- No Results - Application does not exist -->
-  <div *ngIf="!isLoading && !error && applications.length === 0" class="no-applications">
-    <div class="no-apps-icon"><i class="fas fa-search"></i></div>
-    <h3 class="no-apps-title">Application does not exist</h3>
+  <!-- No Results State -->
+  <div
+    *ngIf="!isLoading && !error && applications.length === 0"
+    class="no-applications"
+  >
+    <div class="no-apps-icon">
+      <i class="fas fa-search"></i>
+    </div>
+    <h3 class="no-apps-title">
+      {{
+        searchTerm ? "No matching applications" : "No applications available"
+      }}
+    </h3>
     <p class="no-apps-message">
-      <span *ngIf="searchTerm">No applications match your search "{{ searchTerm }}".</span>
-      <span *ngIf="!searchTerm">No applications are available at the moment.</span>
+      <span *ngIf="searchTerm"
+        >No applications match your search "{{ searchTerm }}".</span
+      >
+      <span *ngIf="!searchTerm"
+        >No applications are available at the moment.</span
+      >
     </p>
-    <button *ngIf="searchTerm" class="clear-search-button" (click)="clearSearch()">
+    <button
+      *ngIf="searchTerm"
+      class="clear-search-button"
+      (click)="clearSearch()"
+    >
       Clear Search
     </button>
   </div>
 
-  <!-- Enhanced Pagination with Smart Navigation -->
-  <div class="pagination" *ngIf="!isLoading && !error && totalItems > 0 && totalPages > 1">
-    <!-- First Page Button -->
-    <button class="pagination-nav-button first-last" (click)="goToFirstPage()" [disabled]="currentPage === 1"
-      title="First page">
+  <!-- Pagination Controls -->
+  <nav
+    class="pagination"
+    *ngIf="shouldShowPagination"
+    aria-label="Application pagination"
+  >
+    <!-- First & Previous -->
+    <button
+      class="pagination-nav-button first-last"
+      (click)="goToFirstPage()"
+      [disabled]="currentPage === 1"
+      title="First page"
+      aria-label="Go to first page"
+    >
       ⇤
     </button>
 
-    <!-- Previous Page Button -->
-    <button class="pagination-nav-button" (click)="goToPreviousPage()" [disabled]="currentPage === 1"
-      title="Previous page">
+    <button
+      class="pagination-nav-button"
+      (click)="goToPreviousPage()"
+      [disabled]="currentPage === 1"
+      title="Previous page"
+      aria-label="Go to previous page"
+    >
       ‹
     </button>
 
-    <!-- Page Numbers with Smart Display -->
-    <ng-container *ngFor="let item of paginationItems">
-      <!-- Page Number Button -->
-      <button *ngIf="item.type === 'page'" [class.active]="currentPage === item.value" (click)="changePage(item.value)"
-        class="pagination-page-button" [title]="'Go to page ' + item.value">
+    <!-- Page Numbers -->
+    <ng-container
+      *ngFor="let item of paginationItems; trackBy: trackByPaginationItem"
+    >
+      <button
+        *ngIf="item.type === 'page'"
+        [class.active]="currentPage === item.value"
+        (click)="changePage(item.value)"
+        class="pagination-page-button"
+        [title]="'Go to page ' + item.value"
+        [attr.aria-label]="'Go to page ' + item.value"
+        [attr.aria-current]="currentPage === item.value ? 'page' : null"
+      >
         {{ item.value }}
       </button>
 
-      <!-- Ellipsis -->
-      <span *ngIf="item.type === 'ellipsis'" class="pagination-ellipsis" title="More pages">
+      <span
+        *ngIf="item.type === 'ellipsis'"
+        class="pagination-ellipsis"
+        title="More pages"
+        aria-hidden="true"
+      >
         ...
       </span>
     </ng-container>
 
-    <!-- Next Page Button -->
-    <button class="pagination-nav-button" (click)="goToNextPage()" [disabled]="currentPage === totalPages"
-      title="Next page">
+    <!-- Next & Last -->
+    <button
+      class="pagination-nav-button"
+      (click)="goToNextPage()"
+      [disabled]="currentPage === totalPages"
+      title="Next page"
+      aria-label="Go to next page"
+    >
       ›
     </button>
 
-    <!-- Last Page Button -->
-    <button class="pagination-nav-button first-last" (click)="goToLastPage()" [disabled]="currentPage === totalPages"
-      title="Last page">
+    <button
+      class="pagination-nav-button first-last"
+      (click)="goToLastPage()"
+      [disabled]="currentPage === totalPages"
+      title="Last page"
+      aria-label="Go to last page"
+    >
       ⇥
     </button>
 
-    <!-- Quick Jump (only show if more than 10 pages) -->
+    <!-- Quick Jump (for large datasets) -->
     <div class="page-jump-container" *ngIf="totalPages > 10">
-      <span class="page-jump-text">Go to:</span>
-      <input type="number" class="page-jump-input" [(ngModel)]="jumpToPage" [min]="1" [max]="totalPages"
-        (keyup.enter)="performPageJump()" placeholder="{{ currentPage }}" />
-      <button class="page-jump-button" (click)="performPageJump()"
-        [disabled]="!jumpToPage || jumpToPage < 1 || jumpToPage > totalPages">
+      <label for="pageJumpInput" class="page-jump-text">Go to:</label>
+      <input
+        type="number"
+        id="pageJumpInput"
+        class="page-jump-input"
+        [(ngModel)]="jumpToPage"
+        [min]="1"
+        [max]="totalPages"
+        (keyup.enter)="performPageJump()"
+        [placeholder]="currentPage.toString()"
+        aria-label="Enter page number"
+      />
+      <button
+        class="page-jump-button"
+        (click)="performPageJump()"
+        [disabled]="!jumpToPage || jumpToPage < 1 || jumpToPage > totalPages"
+      >
         Go
       </button>
     </div>
-  </div>
+  </nav>
 
   <!-- Results Summary -->
   <div class="results-summary" *ngIf="!isLoading && !error && totalItems > 0">
@@ -182,46 +316,70 @@
     </p>
   </div>
 
-  <!-- Spoc Popup Modal -->
-  <div class="spoc-popup-overlay" *ngIf="showSpocPopup" (click)="closeSpocPopup()">
-    <div class="spoc-popup" (click)="$event.stopPropagation()">
-      <div class="spoc-popup-header">
-        <h3>Contact Spoc</h3>
-        <button class="spoc-popup-close" (click)="closeSpocPopup()" title="Close">
+  <!-- SPOC Contact Modal -->
+  <div
+    class="modal spoc-popup-overlay"
+    *ngIf="showSpocPopup"
+    (click)="closeSpocPopup()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="spocModalTitle"
+  >
+    <div class="modal-content spoc-popup" (click)="$event.stopPropagation()">
+      <div class="modal-header spoc-popup-header">
+        <h3 id="spocModalTitle">Contact SPOC</h3>
+        <button
+          class="modal-close spoc-popup-close"
+          (click)="closeSpocPopup()"
+          title="Close"
+          aria-label="Close modal"
+        >
           ×
         </button>
       </div>
-      <div class="spoc-popup-content">
+      <div class="modal-body spoc-popup-content">
         <div class="spoc-popup-icon">
           <i class="fas fa-info-circle"></i>
         </div>
         <p class="spoc-popup-message">{{ spocPopupMessage }}</p>
       </div>
-      <div class="spoc-popup-footer">
-        <button class="spoc-popup-ok-button" (click)="closeSpocPopup()">
+      <div class="modal-footer spoc-popup-footer">
+        <button class="btn spoc-popup-ok-button" (click)="closeSpocPopup()">
           OK
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Application URL Popup Modal -->
-  <div class="url-popup-overlay" *ngIf="showUrlPopup" (click)="closeUrlPopup()">
-    <div class="url-popup" (click)="$event.stopPropagation()">
-      <div class="url-popup-header">
-        <h3>Application URL</h3>
-        <button class="url-popup-close" (click)="closeUrlPopup()" title="Close">
+  <!-- Application URL Modal -->
+  <div
+    class="modal url-popup-overlay"
+    *ngIf="showUrlPopup"
+    (click)="closeUrlPopup()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="urlModalTitle"
+  >
+    <div class="modal-content url-popup" (click)="$event.stopPropagation()">
+      <div class="modal-header url-popup-header">
+        <h3 id="urlModalTitle">Application URL</h3>
+        <button
+          class="modal-close url-popup-close"
+          (click)="closeUrlPopup()"
+          title="Close"
+          aria-label="Close modal"
+        >
           ×
         </button>
       </div>
-      <div class="url-popup-content">
+      <div class="modal-body url-popup-content">
         <div class="url-popup-icon">
           <i class="fas fa-exclamation-triangle"></i>
         </div>
         <p class="url-popup-message">{{ urlPopupMessage }}</p>
       </div>
-      <div class="url-popup-footer">
-        <button class="url-popup-ok-button" (click)="closeUrlPopup()">
+      <div class="modal-footer url-popup-footer">
+        <button class="btn url-popup-ok-button" (click)="closeUrlPopup()">
           OK
         </button>
       </div>
