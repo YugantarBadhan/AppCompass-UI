@@ -33,7 +33,6 @@
           />
         </div>
         <!-- User Dropdown Menu -->
-        <!-- User Dropdown Menu -->
         <div class="user-dropdown" [class.show]="isUserMenuOpen">
           <div
             *ngIf="role == 'ADMIN'"
@@ -137,16 +136,16 @@
         </div>
       </nav>
 
+      <!-- Fixed Developer Info Section -->
       <div class="developer-info">
-        <a href="#" class="developer-link">
-          <!-- <span class="developer-icon">👨‍💻</span> -->
+        <div class="developer-display">
           <img
             src="assets/images/developer.png"
             alt="Developer"
             class="developer-icon"
           />
           <span class="developer-text">Developed by Yugantar Badhan</span>
-        </a>
+        </div>
       </div>
     </aside>
 
